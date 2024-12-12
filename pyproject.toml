@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "tablespam"
+version = "0.1.0"
+description = ""
+authors = ["Jannik Orzek <jannik.orzek@mailbox.org>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+pyparsing = "^3.2.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -34,7 +34,9 @@ def create_entries(entry_list: list[str], depth: int | None = None) -> list:
     elif (depth > 1) & ((entry_list[1] != "=") | len(entry_list) < 3):
         raise ValueError(f"Expected a spanner name in {entry_list}.")
     else:
-        spanner_name = entry_list[0]
+        # spanner names could still contain backticks; those are only removed
+        # for variables. Therefore, we remove them here:
+        spanner_name = entry_list[0].strip("`")
         # We can now drop the first two entries as those are the spanner name
         # and the equal sign. Everything else should be actual entries.
         entry_list = entry_list[2:]

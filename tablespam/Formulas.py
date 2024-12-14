@@ -12,9 +12,18 @@ class Formula:
     
     def get_entries(self) -> dict:
         parsed_formula = self.parse_formula()
-        lhs = create_entries(parsed_formula[0])
+        if parsed_formula[0] == "1":
+            lhs = None
+        else:
+            lhs = create_entries(parsed_formula[0])
         rhs = create_entries(parsed_formula[1])
 
+        return {"lhs": lhs, "rhs": rhs}
+    
+    def get_variables(self) -> dict[str, list[str]]:
+        entries = self.get_entries()
+        lhs = extract_variables(entries["lhs"])
+        rhs = extract_variables(entries["rhs"])
         return {"lhs": lhs, "rhs": rhs}
 
 def create_entries(entry_list: list[str], depth: int | None = None) -> list:
@@ -49,10 +58,25 @@ def create_entries(entry_list: list[str], depth: int | None = None) -> list:
             raise ValueError(f"Could not parse {entry_list}.")
     return header_entry
 
+def extract_variables(entry_list: list[str],
+                      variables: list[str] | None = None) -> list[str]:
+    if entry_list is None:
+        return None
+    if variables is None:
+        variables = []
+    if len(entry_list.entries) == 0:
+        variables.append(entry_list.item_name)
+    else:
+        for entry in entry_list.entries:
+            extract_variables(entry, variables=variables)
+    return variables
+
 
 def split_variable(var: str) -> dict[str, str]:
+    if var == "1":
+        return({"name": var, "item_name": var})
     variable = (pyp.Word(pyp.alphas + "_", pyp.alphas + pyp.nums + "_") | 
-                pyp.QuotedString("`", escChar='\\'))
+                pyp.QuotedString("`", escChar='\\', unquote_results=True))
     variable_with_name = variable + pyp.Suppress(":") + variable
     if variable_with_name.matches(var):
         result = variable_with_name.parseString(var).asList()
@@ -102,7 +126,7 @@ def define_parser():
     # recursive algorithm
     term = define_variable() | pyp.Group(pyp.Suppress('(') + expr + pyp.Suppress(')'))
     expr <<= term + pyp.ZeroOrMore(define_operators() + term) # Recursive expression
-    full_expression = pyp.Group(expr).setResultsName("lhs") + pyp.Suppress("~") + pyp.Group(expr).setResultsName("rhs")
+    full_expression = ("1" | pyp.Group(expr).setResultsName("lhs"))+ pyp.Suppress("~") + pyp.Group(expr).setResultsName("rhs")
 
     return full_expression
 

@@ -1,83 +1,8 @@
 import great_tables as gt
 import polars as pl
-from tablespam.TableSpam import TableSpam
-
-def tablespam_as_gt(tbl: TableSpam,
-                    groupname_col = None,
-                    separator_style = gt.style.borders(sides = ["right"],
-                                                      color = "gray"), 
-                    auto_format = True, 
-                    decimals: int = 2,
-                    **kwargs) -> gt.GT:
-    """
-    Translates a table created with `tablespam` into a `gt` table. 
-
-    The `tablespan` library does not provide built-in support for rendering tables as HTML. 
-    However, with `as_gt`, a `tablespan` table can be converted into a `gt` table, 
-    which supports HTML and LaTeX output. For more details on `gt`, see 
-    <https://gt.rstudio.com/>.
-
-    Args:
-        tbl (TableSpan): A table created using `tablespam`.
-        groupname_col (str, optional): Column names to group data. Refer to the 
-            `gt` documentation for details.
-        separator_style (str, optional): Style of the vertical line separating row 
-            names from data.
-        auto_format (bool, optional): Whether the table should be formatted automatically. 
-            Defaults to True.
-        **kwargs: Additional keyword arguments passed to the `gt` function.
-
-    Returns:
-        GtTable: A `gt` table object that can be further customized using the `gt` package.
-
-    """
-    if tbl.header["lhs"] is not None:
-        data_set = pl.concat([tbl.table_data["row_data"],
-                              tbl.table_data["col_data"]],
-                              how = 'horizontal')
-    else:
-        data_set = tbl.table_data["col_data"]
-
-    # Create the gt-like table (assuming `gt` functionality is implemented)
-    gt_tbl = gt.GT(data=data_set, 
-                   groupname_col=groupname_col, 
-                   **kwargs)
-
-    gt_tbl = add_gt_spanners(gt_tbl=gt_tbl, tbl=tbl)
-
-    if tbl.header["lhs"] is not None:
-        rowname_headers = tbl.table_data["row_data"].columns
-        gt_tbl = add_gt_rowname_separator(
-            gt_tbl=gt_tbl,
-            right_of=rowname_headers[-1],  # Use the last row header
-            separator_style=separator_style
-        )
-
-    # Add titles and subtitles if present
-    if tbl.title is not None or tbl.subtitle is not None:
-        gt_tbl = add_gt_titles(
-            gt_tbl=gt_tbl,
-            title=tbl.title,
-            subtitle=tbl.subtitle
-        )
-
-    # Add footnotes if present
-    if tbl.footnote is not None:
-        gt_tbl = add_gt_footnote(
-            gt_tbl=gt_tbl,
-            footnote=tbl.footnote
-        )
-
-    # Apply auto-formatting if requested
-    if auto_format:
-        gt_tbl = add_automatic_formatting(gt_tbl,
-                                 decimals = decimals)
-        gt_tbl = gt_tbl.sub_missing(missing_text="")
-
-    return gt_tbl
 
 def add_gt_spanners(gt_tbl: gt.GT, 
-                    tbl: TableSpam) -> gt.GT:
+                    tbl: "TableSpam") -> gt.GT:
   flattened_tbl = flatten_table(tbl)
 
   if flattened_tbl["flattened_lhs"] is not None:
@@ -126,7 +51,7 @@ def add_gt_spanner_partial(gt_tbl: gt.GT,
                              
   return gt_tbl
 
-def flatten_table(tbl: TableSpam) -> dict[str, list]:
+def flatten_table(tbl: "TableSpam") -> dict[str, list]:
   if(tbl.header["lhs"] is not None):
     flattened_lhs = flatten_table_partial(tbl_partial = tbl.header["lhs"])
   else:

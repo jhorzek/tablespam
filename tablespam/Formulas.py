@@ -130,9 +130,3 @@ def define_parser():
 
     return full_expression
 
-form = Formula(formula="Some + (A = b1 + `this is a  variable`:name) ~ other + (d = (e = f:h)) + g + h")
-parsed = form.parse_formula()
-
-type(split_variable("klsdjf:`skjdf sdf`"))
-entries = create_entries(parsed[1])
-print(entries)

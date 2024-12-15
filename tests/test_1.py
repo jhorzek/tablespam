@@ -28,10 +28,13 @@ summarized_table = (
 )
 
 tbl = TableSpam(data = summarized_table,
-                formula = """Cylinder:cyl + Engine:vs ~
-                N +
+                formula = 
+                """
+                Cylinder:cyl + Engine:vs ~
+                N + 
                 (`Horse Power` = Mean:mean_hp + SD:sd_hp) +
-                (`Weight` = `Mean Value`:mean_wt + SD:sd_wt)""",
+                (`Weight` = `Mean Value`:mean_wt + SD:sd_wt)
+                """,
                 title = "Motor Trend Car Road Tests",
                 subtitle = "A table created with tablespan",
                 footnote = "Data from the infamous mtcars data set.")

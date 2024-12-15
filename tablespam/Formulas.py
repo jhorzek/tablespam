@@ -16,7 +16,9 @@ class Formula:
             lhs = None
         else:
             lhs = create_entries(parsed_formula[0])
+            lhs = add_header_width(lhs)
         rhs = create_entries(parsed_formula[1])
+        rhs = add_header_width(rhs)
 
         return {"lhs": lhs, "rhs": rhs}
     
@@ -132,3 +134,37 @@ def define_parser():
 
     return full_expression
 
+def add_header_width(parsed_partial):
+    """
+    Adds width information to each element in a table header.
+
+    Tablespan represents headers as nested lists. This function calculates how
+    wide each header entry must be by determining how many root elements each
+    parent element spans. For example, if a header 'x' spans two elements 'x1' and 'x2':
+
+        |    x    |
+        | x1 | x2 |
+
+    The function updates each header entry with its corresponding width.
+
+    Args:
+        parsed_partial (dict): The left-hand side or right-hand side of the parsed table.
+
+    Returns:
+        dict or None: The parsed_partial with additional width fields, or None if parsed_partial is None.
+    """
+    if parsed_partial is None:
+        return None
+
+    # In case of single level set width to 1 (current parsed_partial is not a spanner) 
+    if len(parsed_partial.entries) == 0:
+        parsed_partial.set_width(1)
+        return parsed_partial
+
+    # Recursively go through all nested spanners and add to width
+    parsed_partial.set_width(0)
+    for entry_index in range(len(parsed_partial.entries)):
+        parsed_partial.entries[entry_index] = add_header_width(parsed_partial.entries[entry_index])
+        parsed_partial.set_width(parsed_partial.width + parsed_partial.entries[entry_index].width)
+
+    return parsed_partial

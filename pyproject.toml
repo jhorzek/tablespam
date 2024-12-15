@@ -2,7 +2,7 @@
 name = "tablespam"
 version = "0.1.1"
 description = ""
-authors = ["Jannik Orzek <jannik.orzek@mailbox.org>"]
+authors = ["Jannik Orzek <jannik.orzek@mailbox.org>", "Christoph Koch"]
 readme = "README.md"
 
 [tool.poetry.dependencies]

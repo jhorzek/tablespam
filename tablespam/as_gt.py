@@ -21,7 +21,7 @@ def add_gt_spanner_partial(gt_tbl: gt.GT,
   # a spanner must already be in the table, otherwise we get an error.
   # The level tells us the order; we have to start with the lowest one
   levels = list(set([tbl_part["level"] for tbl_part in tbl_partial]))
-  levels.sort(reverse=True)
+  levels.sort()
 
   # Next, we iterate over the levels and add them to the gt:
   for level in levels:

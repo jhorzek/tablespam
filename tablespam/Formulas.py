@@ -16,7 +16,11 @@ class Formula:
             lhs = None
         else:
             lhs = create_entries(parsed_formula[0])
+            lhs = add_header_width(lhs)
+            lhs = add_header_level(lhs)
         rhs = create_entries(parsed_formula[1])
+        rhs = add_header_width(rhs)
+        rhs = add_header_level(rhs)
 
         return {"lhs": lhs, "rhs": rhs}
     
@@ -43,8 +47,6 @@ def create_entries(entry_list: list[str], depth: int | None = None) -> list:
 
         header_entry = HeaderEntry(name = spanner_name, 
                                    item_name = spanner_name)
-        
-    header_entry.set_level(depth)
 
     for entry in entry_list:
         if isinstance(entry, str):
@@ -52,7 +54,6 @@ def create_entries(entry_list: list[str], depth: int | None = None) -> list:
             variable = split_variable(entry)
             sub_entry = HeaderEntry(name = variable["name"],
                         item_name = variable["item_name"])
-            sub_entry.set_level(depth + 1)
             header_entry.add_entry(sub_entry)
         elif isinstance(entry, list):
             header_entry.add_entry(create_entries(entry, depth = depth + 1))
@@ -132,3 +133,64 @@ def define_parser():
 
     return full_expression
 
+def add_header_width(parsed_partial):
+    """
+    Adds width information to each element in a table header.
+
+    Tablespan represents headers as nested lists. This function calculates how
+    wide each header entry must be by determining how many root elements each
+    parent element spans. For example, if a header 'x' spans two elements 'x1' and 'x2':
+
+        |    x    |
+        | x1 | x2 |
+
+    The function updates each header entry with its corresponding width.
+
+    Args:
+        parsed_partial (dict): The left-hand side or right-hand side of the parsed table.
+
+    Returns:
+        dict or None: The parsed_partial with additional width fields, or None if parsed_partial is None.
+    """
+    if parsed_partial is None:
+        return None
+
+    # In case of single level set width to 1 (current parsed_partial is not a spanner) 
+    if len(parsed_partial.entries) == 0:
+        parsed_partial.set_width(1)
+        return parsed_partial
+
+    # Recursively go through all nested spanners and add to width
+    parsed_partial.set_width(0)
+    for entry_index in range(len(parsed_partial.entries)):
+        parsed_partial.entries[entry_index] = add_header_width(parsed_partial.entries[entry_index])
+        parsed_partial.set_width(parsed_partial.width + parsed_partial.entries[entry_index].width)
+
+    return parsed_partial
+
+def add_header_level(parsed_partial):
+    if parsed_partial is None:
+        return None
+
+    # Level 1 is the level of the headers that are closest
+    # to the data. When we have an empty entries list,
+    # we reached that level.
+    if len(parsed_partial.entries) == 0:
+        parsed_partial.set_level(1)
+        return parsed_partial
+    
+    parsed_partial.set_level(0)
+    for entry_index in range(len(parsed_partial.entries)):
+        # Bascially, what we are doing here is updating the level of one
+        # subentry at a time
+        parsed_partial.entries[entry_index] = add_header_level(parsed_partial.entries[entry_index])
+        # After updating the subentries, we check if the current level of the entry
+        # is lower than the subentry + 1. If this is the case, we need to update the level
+        # of the entry.
+        parsed_partial.set_level(max(parsed_partial.level,
+                                     parsed_partial.entries[entry_index].level + 1))
+        
+    if parsed_partial.level == 0:
+        raise ValueError(f"Could not set a level for {parsed_partial}")
+        
+    return parsed_partial

@@ -2,11 +2,11 @@
 name = "tablespam"
 version = "0.1.1"
 description = ""
-authors = ["Jannik Orzek <jannik.orzek@mailbox.org>"]
+authors = ["Jannik Orzek <jannik.orzek@mailbox.org>", "Christoph Koch"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 pyparsing = "^3.2.0"
 polars = "^1.17.1"
 great-tables = "^0.15.0"

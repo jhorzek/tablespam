@@ -1,52 +1,64 @@
 from tablespam.Formulas import Formula
 import polars as pl
 import great_tables as gt
-from tablespam.as_gt import add_gt_spanners, add_gt_rowname_separator, add_gt_titles, add_gt_footnote, add_automatic_formatting
+from tablespam.as_gt import (
+    add_gt_spanners,
+    add_gt_rowname_separator,
+    add_gt_titles,
+    add_gt_footnote,
+    add_automatic_formatting,
+)
+
 
 class TableSpam:
-    def __init__(self,
-                 data: pl.DataFrame,
-                 formula: str,
-                 title: str | None = None, 
-                 subtitle: str | None = None,
-                 footnote : str | None = None):
+    def __init__(
+        self,
+        data: pl.DataFrame,
+        formula: str,
+        title: str | None = None,
+        subtitle: str | None = None,
+        footnote: str | None = None,
+    ):
         self.data = data
 
         form = Formula(formula=formula)
         variables = form.get_variables()
         self.table_data = {
             "row_data": select_data(self.data, variables["lhs"]),
-            "col_data": select_data(self.data, variables["rhs"])
+            "col_data": select_data(self.data, variables["rhs"]),
         }
 
         self.title = title
         self.subtitle = subtitle
         self.footnote = footnote
         self.header = form.get_entries()
-    
-    def as_gt(self,
-                    separator_style: gt.style.borders = gt.style.borders(sides = ["right"],
-                                                      color = "gray"), 
-                    auto_format: bool = True, 
-                    decimals: int = 2,
-                    groupname_col: str | None = None,
-                    auto_align: bool = True,
-                    id: str | None = None,
-                    locale: str | None = None) -> gt.GT:
-        """
-        Translates a table created with `tablespam` into a `gt` table. 
 
-        The `tablespan` library does not provide built-in support for rendering tables as HTML. 
-        However, with `as_gt`, a `tablespan` table can be converted into a `gt` table, 
-        which supports HTML and LaTeX output. For more details on `gt`, see 
+    def as_gt(
+        self,
+        separator_style: gt.style.borders = gt.style.borders(
+            sides=["right"], color="gray"
+        ),
+        auto_format: bool = True,
+        decimals: int = 2,
+        groupname_col: str | None = None,
+        auto_align: bool = True,
+        id: str | None = None,
+        locale: str | None = None,
+    ) -> gt.GT:
+        """
+        Translates a table created with `tablespam` into a `gt` table.
+
+        The `tablespan` library does not provide built-in support for rendering tables as HTML.
+        However, with `as_gt`, a `tablespan` table can be converted into a `gt` table,
+        which supports HTML and LaTeX output. For more details on `gt`, see
         <https://gt.rstudio.com/>.
 
         Args:
-            groupname_col (str, optional): Column names to group data. Refer to the 
+            groupname_col (str, optional): Column names to group data. Refer to the
                 `gt` documentation for details.
-            separator_style (str, optional): Style of the vertical line separating row 
+            separator_style (str, optional): Style of the vertical line separating row
                 names from data.
-            auto_format (bool, optional): Whether the table should be formatted automatically. 
+            auto_format (bool, optional): Whether the table should be formatted automatically.
                 Defaults to True.
             auto_align (bool, optional): Should the table entries be aligned automatically? See great_tables for more information
             id (str, optional): Id of the HTML table. See great_tables for more details
@@ -59,7 +71,7 @@ class TableSpam:
         ```python
         from tablespam import TableSpam
         import polars as pl
-        
+
         cars = pl.DataFrame({
             "mpg": [21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2],
             "cyl": [6, 6, 4, 6, 8, 6, 8, 4, 4, 6],
@@ -98,61 +110,61 @@ class TableSpam:
         tbl.as_gt().show()
         ```
         """
-        if ((self.header["lhs"] is not None) and 
-            (self.table_data["row_data"] is not None) and 
-            (isinstance(self.table_data["row_data"], pl.DataFrame)) and 
-            (isinstance(self.table_data["col_data"], pl.DataFrame))):
-            data_set = pl.concat([self.table_data["row_data"],
-                                self.table_data["col_data"]],
-                                how = 'horizontal')
+        if (
+            (self.header["lhs"] is not None)
+            and (self.table_data["row_data"] is not None)
+            and (isinstance(self.table_data["row_data"], pl.DataFrame))
+            and (isinstance(self.table_data["col_data"], pl.DataFrame))
+        ):
+            data_set = pl.concat(
+                [self.table_data["row_data"], self.table_data["col_data"]],
+                how="horizontal",
+            )
         elif isinstance(self.table_data["col_data"], pl.DataFrame):
             data_set = self.table_data["col_data"]
         else:
             raise ValueError("table_data should be of type pl.DataFrame.")
 
         # Create the gt-like table (assuming `gt` functionality is implemented)
-        gt_tbl = gt.GT(data=data_set, 
-                    groupname_col=groupname_col,
-                    auto_align = auto_align,
-                    id = id,
-                    locale = locale)
+        gt_tbl = gt.GT(
+            data=data_set,
+            groupname_col=groupname_col,
+            auto_align=auto_align,
+            id=id,
+            locale=locale,
+        )
 
         gt_tbl = add_gt_spanners(gt_tbl=gt_tbl, tbl=self)
 
-        if (self.header["lhs"] is not None) and (self.table_data["row_data"] is not None):
+        if (self.header["lhs"] is not None) and (
+            self.table_data["row_data"] is not None
+        ):
             rowname_headers = self.table_data["row_data"].columns
             gt_tbl = add_gt_rowname_separator(
                 gt_tbl=gt_tbl,
                 right_of=rowname_headers[-1],  # Use the last row header
-                separator_style=separator_style
+                separator_style=separator_style,
             )
 
         # Add titles and subtitles if present
         if self.title is not None or self.subtitle is not None:
             gt_tbl = add_gt_titles(
-                gt_tbl=gt_tbl,
-                title=self.title,
-                subtitle=self.subtitle
+                gt_tbl=gt_tbl, title=self.title, subtitle=self.subtitle
             )
 
         # Add footnotes if present
         if self.footnote is not None:
-            gt_tbl = add_gt_footnote(
-                gt_tbl=gt_tbl,
-                footnote=self.footnote
-            )
+            gt_tbl = add_gt_footnote(gt_tbl=gt_tbl, footnote=self.footnote)
 
         # Apply auto-formatting if requested
         if auto_format:
-            gt_tbl = add_automatic_formatting(gt_tbl,
-                                    decimals = decimals)
+            gt_tbl = add_automatic_formatting(gt_tbl, decimals=decimals)
             gt_tbl = gt_tbl.sub_missing(missing_text="")
 
         return gt_tbl
 
-def select_data(data: pl.DataFrame, variables: list[str]) -> pl.DataFrame|None:
+
+def select_data(data: pl.DataFrame, variables: list[str]) -> pl.DataFrame | None:
     if variables is None:
         return None
     return data.select(variables)
-
-

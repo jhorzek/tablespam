@@ -14,12 +14,32 @@ class HeaderEntry():
         self.item_name = item_name
         self.entries = []
 
-    def add_entry(self, entry: Self):
+    def add_entry(self, entry: Self) -> None:
         self.entries.append(entry)
 
-    def set_width(self, width: int):
+    def set_width(self, width: int) -> None:
         self.width = width
     
-    def set_level(self, level: int):
+    def set_level(self, level: int) -> None:
         self.level = level
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, HeaderEntry):
+            return False
+        equal = all([self.name == other.name,
+                   self.item_name == other.item_name])
+        if hasattr(self, 'width'):
+            if hasattr(other, 'width'):
+                  equal = equal & (self.width == other.width)
+            else:
+                 equal = False
+        if hasattr(self, 'level'):
+            if hasattr(other, 'level'):
+                  equal = equal & (self.level == other.level)
+            else:
+                 equal = False            
+
+        for i in range(len(self.entries)):
+            equal = equal & self.entries[i].__eq__(other.entries[i])
+        return equal
     

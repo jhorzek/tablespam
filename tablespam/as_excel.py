@@ -1,6 +1,12 @@
-def get_locations(tbl,
-                  start_row,
-                  start_col):
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from tablespam.TableSpam import TableSpam
+
+def get_locations(tbl: TableSpam,
+                  start_row: int,
+                  start_col: int) -> dict[str, dict[str, int|None]]:
     """Provides row and column indices for the table elements.
 
     Args:
@@ -17,13 +23,15 @@ def get_locations(tbl,
         start_row_title = end_row_title = start_row
         start_row += 1
     else:
-        start_row_title = end_row_title = None
+        start_row_title = None
+        end_row_title = None
 
     if tbl.subtitle is not None:
         start_row_subtitle = end_row_subtitle = start_row
         start_row += 1
     else:
-        start_row_subtitle = end_row_subtitle = None
+        start_row_subtitle = None
+        end_row_subtitle = None
 
     start_row_header = start_row
 
@@ -37,10 +45,12 @@ def get_locations(tbl,
 
     # Begin data block at current row (one row below header)
     start_row_data = start_row
-    end_row_data = start_row + len(tbl.table_data['col_data']) - 1
+    if tbl.table_data['col_data'] is not None:
+        end_row_data = start_row + len(tbl.table_data['col_data']) - 1
 
     # Add one row for every entry in the table
-    start_row += len(tbl.table_data['col_data'])
+    if tbl.table_data['col_data'] is not None:
+        start_row += len(tbl.table_data['col_data'])
 
     # Footnote is only one row long
     start_row_footnote = end_row_footnote = start_row

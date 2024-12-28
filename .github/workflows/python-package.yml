@@ -33,4 +33,9 @@ jobs:
         poetry install
     - name: Run tests
       run: |
-         poetry run python tests/test_1.py
+         poetry run pytest
+    - name: Run mypy
+      run: |
+        poetry add mypy
+        poetry install
+        mypy tablespam --disallow-untyped-defs

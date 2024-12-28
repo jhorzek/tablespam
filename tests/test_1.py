@@ -36,4 +36,4 @@ tbl = TableSpam(data = summarized_table,
                 subtitle = "A table created with tablespan",
                 footnote = "Data from the infamous mtcars data set.")
 
-print(tbl.as_gt())
+tbl.as_gt()

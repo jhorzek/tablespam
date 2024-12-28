@@ -2,6 +2,7 @@ from tablespam.Formulas import Formula
 import polars as pl
 import great_tables as gt
 from tablespam.as_gt import add_gt_spanners, add_gt_rowname_separator, add_gt_titles, add_gt_footnote, add_automatic_formatting
+
 class TableSpam:
     def __init__(self,
                  data: pl.DataFrame,
@@ -24,12 +25,14 @@ class TableSpam:
         self.header = form.get_entries()
     
     def as_gt(self,
-              groupname_col = None,
-                    separator_style = gt.style.borders(sides = ["right"],
+                    separator_style: gt.style.borders = gt.style.borders(sides = ["right"],
                                                       color = "gray"), 
-                    auto_format = True, 
+                    auto_format: bool = True, 
                     decimals: int = 2,
-                    **kwargs) -> gt.GT:
+                    groupname_col: str | None = None,
+                    auto_align: bool = True,
+                    id: str | None = None,
+                    locale: str | None = None) -> gt.GT:
         """
         Translates a table created with `tablespam` into a `gt` table. 
 
@@ -45,7 +48,9 @@ class TableSpam:
                 names from data.
             auto_format (bool, optional): Whether the table should be formatted automatically. 
                 Defaults to True.
-            **kwargs: Additional keyword arguments passed to the `gt` function.
+            auto_align (bool, optional): Should the table entries be aligned automatically? See great_tables for more information
+            id (str, optional): Id of the HTML table. See great_tables for more details
+            locale (str, optional): affects formatting of dates and numbers. See great_tables for more details.
 
         Returns:
             GtTable: A `gt` table object that can be further customized using the `gt` package.
@@ -93,21 +98,28 @@ class TableSpam:
         tbl.as_gt().show()
         ```
         """
-        if self.header["lhs"] is not None:
+        if ((self.header["lhs"] is not None) and 
+            (self.table_data["row_data"] is not None) and 
+            (isinstance(self.table_data["row_data"], pl.DataFrame)) and 
+            (isinstance(self.table_data["col_data"], pl.DataFrame))):
             data_set = pl.concat([self.table_data["row_data"],
                                 self.table_data["col_data"]],
                                 how = 'horizontal')
-        else:
+        elif isinstance(self.table_data["col_data"], pl.DataFrame):
             data_set = self.table_data["col_data"]
+        else:
+            raise ValueError("table_data should be of type pl.DataFrame.")
 
         # Create the gt-like table (assuming `gt` functionality is implemented)
         gt_tbl = gt.GT(data=data_set, 
-                    groupname_col=groupname_col, 
-                    **kwargs)
+                    groupname_col=groupname_col,
+                    auto_align = auto_align,
+                    id = id,
+                    locale = locale)
 
         gt_tbl = add_gt_spanners(gt_tbl=gt_tbl, tbl=self)
 
-        if self.header["lhs"] is not None:
+        if (self.header["lhs"] is not None) and (self.table_data["row_data"] is not None):
             rowname_headers = self.table_data["row_data"].columns
             gt_tbl = add_gt_rowname_separator(
                 gt_tbl=gt_tbl,
@@ -138,7 +150,7 @@ class TableSpam:
 
         return gt_tbl
 
-def select_data(data, variables):
+def select_data(data: pl.DataFrame, variables: list[str]) -> pl.DataFrame|None:
     if variables is None:
         return None
     return data.select(variables)

@@ -38,4 +38,4 @@ jobs:
       run: |
         poetry add mypy
         poetry install
-        mypy tablespam --disallow-untyped-defs
+        poetry run mypy tablespam --disallow-untyped-defs

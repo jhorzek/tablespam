@@ -112,7 +112,7 @@ def create_entries(
     if depth is None:
         depth = 1
         header_entry = HeaderEntry(name="_BASE_LEVEL_", item_name="_BASE_LEVEL_")
-    elif (depth > 1) & ((entry_list[1] != "=") | len(entry_list) < 3):
+    elif (depth > 1) & ((entry_list[1] != "=") | (len(entry_list) < 3)):
         raise ValueError(f"Expected a spanner name in {entry_list}.")
     else:
         # spanner names could still contain backticks; those are only removed
@@ -260,6 +260,7 @@ def define_parser() -> pyp.core.ParserElement:
         ("1" | pyp.Group(expr).setResultsName("lhs"))
         + pyp.Suppress("~")
         + pyp.Group(expr).setResultsName("rhs")
+        + pyp.StringEnd()
     )
 
     return full_expression

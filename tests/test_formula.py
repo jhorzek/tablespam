@@ -5,7 +5,7 @@ import pyparsing
 
 
 def test_valid_formulas():
-    f = Formula("x ~ y")
+    f = Formula("   x ~ y ")
     assert f.parse_formula() == [["x"], ["y"]]
     assert f.get_variables() == {"lhs": ["x"], "rhs": ["y"]}
     lhs = HeaderEntry(name="_BASE_LEVEL_", item_name="_BASE_LEVEL_")
@@ -85,9 +85,12 @@ def test_invalid_formulas():
         assert f.parse_formula()
 
     # spanner without name
-    with pytest.raises(pyparsing.exceptions.ParseException):
+    with pytest.raises(ValueError):
         f = Formula("(x1 + x2) ~ y1 + b:y2 + y3")
-        assert f.parse_formula()
+        # parsing should still work
+        f.parse_formula()
+        # but extracting the entries should throw an error.
+        assert f.get_entries()
 
     # too many ~
     with pytest.raises(pyparsing.exceptions.ParseException):
@@ -95,4 +98,4 @@ def test_invalid_formulas():
         assert f.parse_formula()
 
 
-test_valid_formulas()
+test_invalid_formulas()

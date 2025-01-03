@@ -102,7 +102,7 @@ def test_cars_no_autostyle():
         title="Motor Trend Car Road Tests",
         subtitle="A table created with tablespan",
         footnote="Data from the infamous mtcars data set.",
-    ).as_gt(auto_format=False)
+    ).as_gt(formatting=None)
     expected = (
         gt.GT(summarized_table, groupname_col=None)
         .tab_header(

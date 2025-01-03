@@ -6,7 +6,8 @@ from tablespam.as_gt import (
     add_gt_rowname_separator,
     add_gt_titles,
     add_gt_footnote,
-    add_automatic_formatting,
+    FormattingFunction,
+    default_formatting,
 )
 
 
@@ -38,8 +39,7 @@ class TableSpam:
         separator_style: gt.style.borders = gt.style.borders(
             sides=["right"], color="gray"
         ),
-        auto_format: bool = True,
-        decimals: int = 2,
+        formatting: FormattingFunction | None = default_formatting,
         groupname_col: str | None = None,
         auto_align: bool = True,
         id: str | None = None,
@@ -58,8 +58,8 @@ class TableSpam:
                 `gt` documentation for details.
             separator_style (str, optional): Style of the vertical line separating row
                 names from data.
-            auto_format (bool, optional): Whether the table should be formatted automatically.
-                Defaults to True.
+            formatting (function, optional): This function is applied to the gt to format
+                all columns.
             auto_align (bool, optional): Should the table entries be aligned automatically? See great_tables for more information
             id (str, optional): Id of the HTML table. See great_tables for more details
             locale (str, optional): affects formatting of dates and numbers. See great_tables for more details.
@@ -107,7 +107,7 @@ class TableSpam:
                         subtitle = "A table created with tablespan",
                         footnote = "Data from the infamous mtcars data set.")
 
-        tbl.as_gt().show()
+        tbl.as_gt() # Use tbl.as_gt().show() to show the table in the browser.
         ```
         """
         if (
@@ -157,9 +157,8 @@ class TableSpam:
             gt_tbl = add_gt_footnote(gt_tbl=gt_tbl, footnote=self.footnote)
 
         # Apply auto-formatting if requested
-        if auto_format:
-            gt_tbl = add_automatic_formatting(gt_tbl, decimals=decimals)
-            gt_tbl = gt_tbl.sub_missing(missing_text="")
+        if formatting is not None:
+            gt_tbl = default_formatting(gt_tbl)
 
         return gt_tbl
 

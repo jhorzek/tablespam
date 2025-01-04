@@ -1,6 +1,5 @@
 from tablespam import TableSpam
 import polars as pl
-import great_tables as gt
 
 cars = pl.DataFrame(
     {

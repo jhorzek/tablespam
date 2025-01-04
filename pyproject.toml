@@ -10,11 +10,30 @@ python = "^3.11"
 pyparsing = "^3.2.0"
 polars = "^1.17.1"
 great-tables = "^0.15.0"
+numpy = "^2.2.1"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.0.0"
-black = "^24.10.0"
+ruff = "^0.8.5"
+mypy = "^1.14.1"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+# Formatting and code checking with ruff
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+docstring-code-format = true
+
+[tool.ruff.lint]
+extend-select = ["D"]
+
+[tool.ruff.lint.per-file-ignores]
+# We don't want to check the test files for documentation
+"tests/**" = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"

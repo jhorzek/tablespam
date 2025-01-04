@@ -1,5 +1,5 @@
-from tablespam.Formulas import *
-from tablespam.Entry import *
+from tablespam.Formulas import Formula
+from tablespam.Entry import HeaderEntry
 import pytest
 import pyparsing
 

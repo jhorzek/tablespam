@@ -2,7 +2,7 @@
 
 > Create satisficing tables in Python the formula way.
 
-`tablespam` is a re-implementation of the R package [`tablespan`](https://github.com/jhorzek/tablespan) in Python. If you find any errors, please contact the python product owner [Christoph Koch](https://github.com/koch-means-cook).
+`tablespam` is a re-implementation of the R package [`tablespan`](https://github.com/jhorzek/tablespan) in Python.
 
 The objective of `tablespam` is to provide a “good enough” approach to
 creating tables by leveraging formulas.

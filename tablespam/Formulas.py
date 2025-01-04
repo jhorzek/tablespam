@@ -1,18 +1,19 @@
+"""Formulas are a rudimentary and limited implementation of an R-style formula syntax for TableSpam."""
+
 from tablespam.Entry import HeaderEntry
 import pyparsing as pyp
 from typing import Union
 
-RecursiveList = list[Union["RecursiveList", str]]
+RecursiveList = list[Union['RecursiveList', str]]
 
 
 class Formula:
-    """The Formula class provides an R-formula like syntax to create
-    tables.
-    """
+    """Provides an R-formula like syntax to create tables."""
 
     def __init__(self, formula: str):
-        """Initialize a Formula object. The Formula class provides an
-        R-formula like syntax to create tables.
+        """Initialize a Formula object.
+
+        The Formula class provides an R-formula like syntax to create tables.
 
         The formula defines the table headers and is inspired by the R package `tables`.
         For example, `Species ~ Sepal_Length + Sepal_Width` defines a table with `Species` as the
@@ -34,7 +35,6 @@ class Formula:
         `1 ~ (Sepal = Length:Sepal_Length + Width:Sepal_Width) + (Petal = Length:Petal_Length + Width:Petal_Width)`
 
         References:
-
         - tables: Murdoch D (2024). tables: Formula-Driven Table Generation. R package version 0.9.31, <https://dmurdoch.github.io/tables/>
 
         Args:
@@ -42,7 +42,7 @@ class Formula:
             the formula should have a left hand side and a right hand side, separated
             by a ~ (e.g., "a + b ~ c + d").
 
-        >>> f = Formula("a + b ~ c + d")
+        >>> f = Formula('a + b ~ c + d')
         >>> f.parse_formula()
         [['a', 'b'], ['c', 'd']]
         """
@@ -50,8 +50,7 @@ class Formula:
         self.expression = define_parser()
 
     def parse_formula(self) -> RecursiveList:
-        """parse_formula breaks down the formula into its elements to make it usable for creating
-        the table.
+        """Parse_formula breaks down the formula into its elements to make it usable for creating the table.
 
         Returns:
             RecursiveList: nested lists with the elements of the table.
@@ -66,7 +65,7 @@ class Formula:
             dict: dict with entries for the lhs and rhs of the table.
         """
         parsed_formula = self.parse_formula()
-        if parsed_formula[0] == "1":
+        if parsed_formula[0] == '1':
             lhs = None
         else:
             lhs = create_entries(parsed_formula[0])
@@ -76,27 +75,29 @@ class Formula:
         rhs = add_header_width(rhs)
         rhs = add_header_level(rhs)
 
-        return {"lhs": lhs, "rhs": rhs}
+        return {'lhs': lhs, 'rhs': rhs}
 
     def get_variables(self) -> dict[str, list[str]]:
         """Extract the names of the variables found in the formula.
-        These names should also be found in the data set.
+
+        The names should also be found in the data set.
 
         Returns:
             dict[str, list[str]]: The dictionary will have the names found on the
             left hand side (lhs) and right hand side (rhs) of the formula.
         """
         entries = self.get_entries()
-        lhs = extract_variables(entries["lhs"])
-        rhs = extract_variables(entries["rhs"])
-        return {"lhs": lhs, "rhs": rhs}
+        lhs = extract_variables(entries['lhs'])
+        rhs = extract_variables(entries['rhs'])
+        return {'lhs': lhs, 'rhs': rhs}
 
 
 def create_entries(
     entry_list: RecursiveList | list[str] | str, depth: int | None = None
 ) -> HeaderEntry:
-    """Creates the header entries. The entries are of type HeaderEntry and
-    may contain other entries nested within them
+    """Create header entries.
+
+    The entries are of type HeaderEntry and may contain other entries nested within them.
 
     Args:
         entry_list (RecursiveList): Current entry list. This list will be filled recursively
@@ -111,16 +112,16 @@ def create_entries(
     """
     if depth is None:
         depth = 1
-        header_entry = HeaderEntry(name="_BASE_LEVEL_", item_name="_BASE_LEVEL_")
-    elif (depth > 1) & ((entry_list[1] != "=") | (len(entry_list) < 3)):
-        raise ValueError(f"Expected a spanner name in {entry_list}.")
+        header_entry = HeaderEntry(name='_BASE_LEVEL_', item_name='_BASE_LEVEL_')
+    elif (depth > 1) & ((entry_list[1] != '=') | (len(entry_list) < 3)):
+        raise ValueError(f'Expected a spanner name in {entry_list}.')
     else:
         # spanner names could still contain backticks; those are only removed
         # for variables. Therefore, we remove them here:
         if isinstance(entry_list[0], str):
-            spanner_name = entry_list[0].strip("`")
+            spanner_name = entry_list[0].strip('`')
         else:
-            raise ValueError("Incorrect type; expected str.")
+            raise ValueError('Incorrect type; expected str.')
         # We can now drop the first two entries as those are the spanner name
         # and the equal sign. Everything else should be actual entries.
         entry_list = entry_list[2:]
@@ -132,21 +133,22 @@ def create_entries(
             # It's a variable
             variable = split_variable(entry)
             sub_entry = HeaderEntry(
-                name=variable["name"], item_name=variable["item_name"]
+                name=variable['name'], item_name=variable['item_name']
             )
             header_entry.add_entry(sub_entry)
         elif isinstance(entry, list):
             header_entry.add_entry(create_entries(entry, depth=depth + 1))
         else:
-            raise ValueError(f"Could not parse {entry_list}.")
+            raise ValueError(f'Could not parse {entry_list}.')
     return header_entry
 
 
 def extract_variables(
     entry_list: HeaderEntry, variables: list[str] | None = None
 ) -> list[str]:
-    """Get the names of the variables found in a formula. The variables
-     are the items that we expect to also be in the data set.
+    """Get the names of the variables found in a formula.
+
+    The variables are the items that we expect to also be in the data set.
 
     Args:
         entry_list (list[str]): list with entries for the header
@@ -169,7 +171,9 @@ def extract_variables(
 
 
 def split_variable(var: str) -> dict[str, str]:
-    """Variables can be either a single statement (e.g. x2) or a name and
+    """Split item label and item name.
+
+    Variables can be either a single statement (e.g. x2) or a name and
     an item (e.g., name:item). This function splits the variable into
     name and item.
 
@@ -182,26 +186,25 @@ def split_variable(var: str) -> dict[str, str]:
     Returns:
         dict[str, str]: name and item_name
     """
-    if var == "1":
-        return {"name": var, "item_name": var}
+    if var == '1':
+        return {'name': var, 'item_name': var}
     variable = pyp.Word(
-        pyp.alphas + "_", pyp.alphas + pyp.nums + "_"
-    ) | pyp.QuotedString("`", escChar="\\", unquote_results=True)
-    variable_with_name = variable + pyp.Suppress(":") + variable
+        pyp.alphas + '_', pyp.alphas + pyp.nums + '_'
+    ) | pyp.QuotedString('`', escChar='\\', unquote_results=True)
+    variable_with_name = variable + pyp.Suppress(':') + variable
     if variable_with_name.matches(var):
         result = variable_with_name.parseString(var).asList()
         if len(result) == 2:
-            return {"name": result[0], "item_name": result[1]}
+            return {'name': result[0], 'item_name': result[1]}
         else:
-            raise ValueError(f"Expected two elements, got {result}")
+            raise ValueError(f'Expected two elements, got {result}')
     else:
         result = variable.parseString(var).asList()
-        return {"name": result[0], "item_name": result[0]}
+        return {'name': result[0], 'item_name': result[0]}
 
 
 def define_variable() -> pyp.core.Combine:
-    """Internal function defining the pattern that variables can
-    have for pyparsing.
+    """Internal function defining the pattern that variables can have for pyparsing.
 
     Returns:
         pyp.core.Combine: pyparsing pattern for variables
@@ -209,23 +212,22 @@ def define_variable() -> pyp.core.Combine:
     # Match regular variable names:
     #  Variable names must start with a letter or underscore, followed
     #  by any combination of letters, numbers, and underscores.
-    single_variable = pyp.Word(pyp.alphas + "_", pyp.alphas + pyp.nums + "_")
+    single_variable = pyp.Word(pyp.alphas + '_', pyp.alphas + pyp.nums + '_')
 
     # We also want to allow for labels with spaces and special characters in them. This is
     # mostly required for renaming columns:
     #  Any variable in `` will be seen as one variable
-    quoted_variable = pyp.QuotedString("`", escChar="\\", unquoteResults=False)
+    quoted_variable = pyp.QuotedString('`', escChar='\\', unquoteResults=False)
     base_variable = single_variable | quoted_variable
 
     # Match colon-separated variable patterns
-    variable = pyp.Combine(base_variable + pyp.Optional(":" + base_variable))
+    variable = pyp.Combine(base_variable + pyp.Optional(':' + base_variable))
 
     return variable
 
 
 def define_operators() -> pyp.core.ParserElement:
-    """Internal function describing the pyparsing pattern for
-    operators (+, :) used in the formulas.
+    """Internal function describing the pyparsing pattern for operators (+, :) used in the formulas.
 
     Returns:
         pyp.core.ParserElement: pyparsing definition of operators
@@ -234,19 +236,18 @@ def define_operators() -> pyp.core.ParserElement:
     # We only need the following operators:
     #  = separates the name of a spanner from the spanner content
     #  + separates elements within a spanner
-    equal = pyp.one_of("=")
-    plus = pyp.Suppress("+")
+    equal = pyp.one_of('=')
+    plus = pyp.Suppress('+')
     operator = equal | plus
 
     return operator
 
 
 def define_parser() -> pyp.core.ParserElement:
-    """Internal function defining the full syntax for the formula parser used
-    to decipher the R-style formula
+    """Internal function defining the full syntax for the formula parser used to decipher the R-style formula.
 
     Returns:
-        _type_: pyparsing definition
+        pyp.core.ParserElement: pyparsing definition
     """
     # Define a forward-declared grammar
     expr = pyp.Forward()
@@ -254,12 +255,12 @@ def define_parser() -> pyp.core.ParserElement:
     # Additionally, we need braces that define groups which will form a spanner.
     # Note that the group itself may contain the expression again, so we have a
     # recursive algorithm
-    term = define_variable() | pyp.Group(pyp.Suppress("(") + expr + pyp.Suppress(")"))
+    term = define_variable() | pyp.Group(pyp.Suppress('(') + expr + pyp.Suppress(')'))
     expr <<= term + pyp.ZeroOrMore(define_operators() + term)  # Recursive expression
     full_expression = (
-        ("1" | pyp.Group(expr).setResultsName("lhs"))
-        + pyp.Suppress("~")
-        + pyp.Group(expr).setResultsName("rhs")
+        ('1' | pyp.Group(expr).setResultsName('lhs'))
+        + pyp.Suppress('~')
+        + pyp.Group(expr).setResultsName('rhs')
         + pyp.StringEnd()
     )
 
@@ -267,8 +268,7 @@ def define_parser() -> pyp.core.ParserElement:
 
 
 def add_header_width(parsed_partial: HeaderEntry) -> HeaderEntry:
-    """
-    Adds width information to each element in a table header.
+    """Adds width information to each element in a table header.
 
     Tablespam represents headers as nested lists. This function calculates how
     wide each header entry must be by determining how many root elements each
@@ -352,6 +352,6 @@ def add_header_level(parsed_partial: HeaderEntry) -> HeaderEntry:
         )
 
     if parsed_partial.level == 0:
-        raise ValueError(f"Could not set a level for {parsed_partial}")
+        raise ValueError(f'Could not set a level for {parsed_partial}')
 
     return parsed_partial

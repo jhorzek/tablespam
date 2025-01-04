@@ -31,11 +31,12 @@ jobs:
     - name: Install dependencies
       run: |
         poetry install
+    - name: ruff linting and docstring test
+      run: |
+        poetry run ruff check
     - name: Run tests
       run: |
-         poetry run pytest
+         poetry run pytest --doctest-modules
     - name: Run mypy
       run: |
-        poetry add mypy
-        poetry install
         poetry run mypy tablespam --disallow-untyped-defs

@@ -24,7 +24,6 @@ def tbl_as_string(
     Returns:
         str: String describing the table
     """
-
     if tbl.table_data['col_data'] is None:
         raise ValueError("tbl.table_data['col_data'] should not be None.")
 

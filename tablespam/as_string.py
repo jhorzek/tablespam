@@ -1,7 +1,7 @@
 """Functions to print the TableSpam to the console."""
 
 from __future__ import annotations  # noqa: D100
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 import numpy as np
 import polars as pl
 
@@ -24,6 +24,10 @@ def tbl_as_string(
     Returns:
         str: String describing the table
     """
+
+    if tbl.table_data['col_data'] is None:
+        raise ValueError("tbl.table_data['col_data'] should not be None.")
+
     if tbl.header['lhs'] is not None:
         max_level = max(tbl.header['lhs'].level, tbl.header['rhs'].level)
         max_col = tbl.header['lhs'].width + tbl.header['rhs'].width
@@ -62,6 +66,8 @@ def tbl_as_string(
     rws = range(max_level, max_level + min(n, tbl.table_data['col_data'].height))
 
     if tbl.header['lhs'] is not None:
+        if tbl.table_data['row_data'] is None:
+            raise ValueError("tbl.table_data['row_data'] should not be None.")
         cls = range(0, tbl.table_data['row_data'].width)
         df_transformed = tbl.table_data['row_data'].head(n=n)
         # Round all floats
@@ -101,7 +107,14 @@ def tbl_as_string(
     # add ...
     if n < tbl.table_data['col_data'].shape[0]:
         header_table = np.vstack(
-            [header_table, np.full((1, header_table.shape[1]), '...')]
+            [
+                header_table,
+                np.full(
+                    (1, header_table.shape[1]),
+                    '...',
+                    dtype=f'<U{max_char}',
+                ),
+            ]
         )
 
     # Add horizontal line. We need the number of characters in
@@ -109,21 +122,29 @@ def tbl_as_string(
     max_lengths = np.vectorize(len)(header_table).max(axis=0)
 
     # Create strings of dashes of corresponding lengths
-    header_table[max_level - 1, :] = np.array(['-' * length for length in max_lengths])
+    header_table[max_level - 1, :] = np.array(
+        ['-' * length for length in max_lengths],
+        dtype=f'<U{max_char}',
+    )
 
     # set the length of each string to be the same
     header_table = np.array(
         [
             [item.ljust(max_lengths[col_idx]) for col_idx, item in enumerate(row)]
             for row in header_table
-        ]
+        ],
+        dtype=f'<U{max_char}',
     )
 
     # add vertical lines to the left and right of the table
     header_table = np.hstack(
         [
             np.hstack([np.full((header_table.shape[0], 1), '|'), header_table]),
-            np.full((header_table.shape[0], 1), '|'),
+            np.full(
+                (header_table.shape[0], 1),
+                '|',
+                dtype=f'<U{max_char}',
+            ),
         ]
     )
 
@@ -149,8 +170,8 @@ def insert_header_entries(
     header_partial: HeaderEntry,
     max_level: int,
     column_offset: int,
-    header_table: np.ndarray,
-) -> np.ndarray:
+    header_table: np.ndarray[tuple[Any, Any], np.dtype[Any]],
+) -> np.ndarray[tuple[Any, Any], np.dtype[Any]]:
     """Insert specific entries into the table.
 
     Args:

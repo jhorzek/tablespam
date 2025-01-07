@@ -155,7 +155,7 @@ tbl = TableSpam(data = summarized_table,
                    (`Horse Power` = Mean:mean_hp + SD:sd_hp) +
                    (`Weight` = Mean:mean_wt + SD:sd_wt)""",
                  title = "Motor Trend Car Road Tests",
-                 subtitle = "A table created with tablespan",
+                 subtitle = "A table created with tablespam",
                  footnote = "Data from the infamous mtcars data set.")
 print(tbl.as_string())
 ```

@@ -115,6 +115,12 @@ def tbl_as_string(
                 ),
             ]
         )
+        # This also replaces the vertical line between the rownames and the data with ..., so
+        # we have to reintroduce the |.
+        if tbl.table_data['row_data'] is not None:
+            header_table[
+                header_table.shape[0] - 1, tbl.table_data['row_data'].shape[1]
+            ] = '|'
 
     # Add horizontal line. We need the number of characters in
     # each column

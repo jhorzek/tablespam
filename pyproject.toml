@@ -4,6 +4,7 @@ version = "0.1.1"
 description = ""
 authors = ["Jannik Orzek <jannik.orzek@mailbox.org>", "Christoph Koch"]
 readme = "README.md"
+license = "GPL-3.0-or-later"
 
 [tool.poetry.dependencies]
 python = "^3.11"

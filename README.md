@@ -86,10 +86,10 @@ print(summarized_table)
     │ --- ┆ --- ┆ --- ┆ ---        ┆ ---       ┆ ---      ┆ ---      │
     │ i64 ┆ i64 ┆ u32 ┆ f64        ┆ f64       ┆ f64      ┆ f64      │
     ╞═════╪═════╪═════╪════════════╪═══════════╪══════════╪══════════╡
-    │ 8   ┆ 0   ┆ 2   ┆ 210.0      ┆ 49.497475 ┆ 3.505    ┆ 0.091924 │
-    │ 4   ┆ 1   ┆ 3   ┆ 83.333333  ┆ 18.502252 ┆ 2.886667 ┆ 0.491155 │
-    │ 6   ┆ 0   ┆ 2   ┆ 110.0      ┆ 0.0       ┆ 2.7475   ┆ 0.180312 │
     │ 6   ┆ 1   ┆ 3   ┆ 112.666667 ┆ 9.291573  ┆ 3.371667 ┆ 0.136045 │
+    │ 6   ┆ 0   ┆ 2   ┆ 110.0      ┆ 0.0       ┆ 2.7475   ┆ 0.180312 │
+    │ 4   ┆ 1   ┆ 3   ┆ 83.333333  ┆ 18.502252 ┆ 2.886667 ┆ 0.491155 │
+    │ 8   ┆ 0   ┆ 2   ┆ 210.0      ┆ 49.497475 ┆ 3.505    ┆ 0.091924 │
     └─────┴─────┴─────┴────────────┴───────────┴──────────┴──────────┘
 
 > Note: `tablespam` currently only supports `polars` data frames.
@@ -119,12 +119,12 @@ print(tbl.as_string())
 ```
 
 
-    | cyl |   mean_hp sd_hp |
-    | --- --- ------- ----- |
-    | 8   |   210.0   49.5  |
-    | 4   |   83.33   18.5  |
-    | 6   |   110.0   0.0   |
-    | ... ... ...     ...   |
+    | cyl | mean_hp sd_hp |
+    | --- - ------- ----- |
+    | 6   | 112.67  9.29  |
+    | 6   | 110.0   0.0   |
+    | 4   | 83.33   18.5  |
+    | ... | ...     ...   |
 
 Note that the row names (`cyl`) are in a separate block to the left.
 
@@ -141,13 +141,13 @@ print(tbl.as_string())
 ```
 
 
-    |     |   Horsepower       |
-    | cyl |   mean_hp    sd_hp |
-    | --- --- ---------- ----- |
-    | 8   |   210.0      49.5  |
-    | 4   |   83.33      18.5  |
-    | 6   |   110.0      0.0   |
-    | ... ... ...        ...   |
+    |     | Horsepower       |
+    | cyl | mean_hp    sd_hp |
+    | --- - ---------- ----- |
+    | 6   | 112.67     9.29  |
+    | 6   | 110.0      0.0   |
+    | 4   | 83.33      18.5  |
+    | ... | ...        ...   |
 
 Spanners can also be nested:
 
@@ -158,14 +158,14 @@ print(tbl.as_string())
 ```
 
 
-    |     |   Horsepower       |
-    |     |   Mean       SD    |
-    | cyl |   mean_hp    sd_hp |
-    | --- --- ---------- ----- |
-    | 8   |   210.0      49.5  |
-    | 4   |   83.33      18.5  |
-    | 6   |   110.0      0.0   |
-    | ... ... ...        ...   |
+    |     | Horsepower       |
+    |     | Mean       SD    |
+    | cyl | mean_hp    sd_hp |
+    | --- - ---------- ----- |
+    | 6   | 112.67     9.29  |
+    | 6   | 110.0      0.0   |
+    | 4   | 83.33      18.5  |
+    | ... | ...        ...   |
 
 ### Renaming Columns
 
@@ -184,13 +184,13 @@ print(tbl.as_string())
 ```
 
 
-    |     |   Horsepower      |
-    | cyl |   Mean       SD   |
-    | --- --- ---------- ---- |
-    | 8   |   210.0      49.5 |
-    | 4   |   83.33      18.5 |
-    | 6   |   110.0      0.0  |
-    | ... ... ...        ...  |
+    |     | Horsepower      |
+    | cyl | Mean       SD   |
+    | --- - ---------- ---- |
+    | 6   | 112.67     9.29 |
+    | 6   | 110.0      0.0  |
+    | 4   | 83.33      18.5 |
+    | ... | ...        ...  |
 
 ### Creating the Full Table
 
@@ -204,21 +204,21 @@ tbl = TableSpam(data = summarized_table,
                    (`Horse Power` = Mean:mean_hp + SD:sd_hp) +
                    (`Weight` = Mean:mean_wt + SD:sd_wt)""",
                  title = "Motor Trend Car Road Tests",
-                 subtitle = "A table created with tablespan",
+                 subtitle = "A table created with tablespam",
                  footnote = "Data from the infamous mtcars data set.")
 print(tbl.as_string())
 ```
 
     Motor Trend Car Road Tests
-    A table created with tablespan
+    A table created with tablespam
 
-    |                 |       Horse Power      Weight      |
-    | Cylinder Engine |   N   Mean        SD   Mean   SD   |
-    | -------- ------ --- --- ----------- ---- ------ ---- |
-    | 8        0      |   2   210.0       49.5 3.51   0.09 |
-    | 4        1      |   3   83.33       18.5 2.89   0.49 |
-    | 6        0      |   2   110.0       0.0  2.75   0.18 |
-    | ...      ...    ... ... ...         ...  ...    ...  |
+    |                 |     Horse Power      Weight      |
+    | Cylinder Engine | N   Mean        SD   Mean   SD   |
+    | -------- ------ - --- ----------- ---- ------ ---- |
+    | 6        1      | 3   112.67      9.29 3.37   0.14 |
+    | 6        0      | 2   110.0       0.0  2.75   0.18 |
+    | 4        1      | 3   83.33       18.5 2.89   0.49 |
+    | ...      ...    | ... ...         ...  ...    ...  |
     Data from the infamous mtcars data set.
 
 ## Exporting to Excel
@@ -331,9 +331,9 @@ print(tbl.as_string())
     | Horsepower      |
     | Mean       SD   |
     | ---------- ---- |
-    | 210.0      49.5 |
-    | 83.33      18.5 |
+    | 112.67     9.29 |
     | 110.0      0.0  |
+    | 83.33      18.5 |
     | ...        ...  |
 
 ## References

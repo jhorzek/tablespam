@@ -43,16 +43,17 @@ def test_cars():
         subtitle='A table created with tablespan',
         footnote='Data from the infamous mtcars data set.',
     ).as_string()
+
     expected = """Motor Trend Car Road Tests
 A table created with tablespan
 
-|                 |       Horse Power      Weight      |
-| Cylinder Engine |   N   Mean        SD   Mean   SD   |
-| -------- ------ --- --- ----------- ---- ------ ---- |
-| 4        1      |   3   83.33       18.5 2.89   0.49 |
-| 6        0      |   2   110.0       0.0  2.75   0.18 |
-| 6        1      |   3   112.67      9.29 3.37   0.14 |
-| ...      ...    ... ... ...         ...  ...    ...  |
+|                 |     Horse Power      Weight      |
+| Cylinder Engine | N   Mean        SD   Mean   SD   |
+| -------- ------ - --- ----------- ---- ------ ---- |
+| 4        1      | 3   83.33       18.5 2.89   0.49 |
+| 6        0      | 2   110.0       0.0  2.75   0.18 |
+| 6        1      | 3   112.67      9.29 3.37   0.14 |
+| ...      ...    | ... ...         ...  ...    ...  |
 Data from the infamous mtcars data set.
 """
     assert tbl == expected
@@ -73,15 +74,15 @@ def test_cars_additional_spanners():
     expected = """Motor Trend Car Road Tests
 A table created with tablespan
 
-|                 |   Results                                            |
-|                 |           Horse Power                                |
-|                 |           Mean        Standard Deviation Weight      |
-| Cylinder Engine |   N       Mean        SD                 Mean   SD   |
-| -------- ------ --- ------- ----------- ------------------ ------ ---- |
-| 4        1      |   3       83.33       18.5               2.89   0.49 |
-| 6        0      |   2       110.0       0.0                2.75   0.18 |
-| 6        1      |   3       112.67      9.29               3.37   0.14 |
-| ...      ...    ... ...     ...         ...                ...    ...  |
+|                 | Results                                            |
+|                 |         Horse Power                                |
+|                 |         Mean        Standard Deviation Weight      |
+| Cylinder Engine | N       Mean        SD                 Mean   SD   |
+| -------- ------ - ------- ----------- ------------------ ------ ---- |
+| 4        1      | 3       83.33       18.5               2.89   0.49 |
+| 6        0      | 2       110.0       0.0                2.75   0.18 |
+| 6        1      | 3       112.67      9.29               3.37   0.14 |
+| ...      ...    | ...     ...         ...                ...    ...  |
 Data from the infamous mtcars data set.
 """
     assert tbl == expected
@@ -126,13 +127,13 @@ def test_cars_no_title():
         footnote='Data from the infamous mtcars data set.',
     ).as_string()
     expected = """
-|                 |       Horse Power      Weight      |
-| Cylinder Engine |   N   Mean        SD   Mean   SD   |
-| -------- ------ --- --- ----------- ---- ------ ---- |
-| 4        1      |   3   83.33       18.5 2.89   0.49 |
-| 6        0      |   2   110.0       0.0  2.75   0.18 |
-| 6        1      |   3   112.67      9.29 3.37   0.14 |
-| ...      ...    ... ... ...         ...  ...    ...  |
+|                 |     Horse Power      Weight      |
+| Cylinder Engine | N   Mean        SD   Mean   SD   |
+| -------- ------ - --- ----------- ---- ------ ---- |
+| 4        1      | 3   83.33       18.5 2.89   0.49 |
+| 6        0      | 2   110.0       0.0  2.75   0.18 |
+| 6        1      | 3   112.67      9.29 3.37   0.14 |
+| ...      ...    | ... ...         ...  ...    ...  |
 Data from the infamous mtcars data set.
 """
     assert tbl == expected
@@ -147,12 +148,12 @@ def test_cars_no_footnote():
                     (`Weight` = Mean:mean_wt + SD:sd_wt)""",
     ).as_string()
     expected = """
-|                 |       Horse Power      Weight      |
-| Cylinder Engine |   N   Mean        SD   Mean   SD   |
-| -------- ------ --- --- ----------- ---- ------ ---- |
-| 4        1      |   3   83.33       18.5 2.89   0.49 |
-| 6        0      |   2   110.0       0.0  2.75   0.18 |
-| 6        1      |   3   112.67      9.29 3.37   0.14 |
-| ...      ...    ... ... ...         ...  ...    ...  |
+|                 |     Horse Power      Weight      |
+| Cylinder Engine | N   Mean        SD   Mean   SD   |
+| -------- ------ - --- ----------- ---- ------ ---- |
+| 4        1      | 3   83.33       18.5 2.89   0.49 |
+| 6        0      | 2   110.0       0.0  2.75   0.18 |
+| 6        1      | 3   112.67      9.29 3.37   0.14 |
+| ...      ...    | ... ...         ...  ...    ...  |
 """
     assert tbl == expected

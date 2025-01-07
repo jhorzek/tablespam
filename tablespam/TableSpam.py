@@ -169,16 +169,13 @@ class TableSpam:
     ...     footnote='Data from the infamous mtcars data set.',
     ... )
     >>> print(tbl.as_string())
-    Motor Trend Car Road Tests
-    A table created with tablespam
-    <BLANKLINE>
-    |                 |       Horse Power      Weight      |
-    | Cylinder Engine |   N   Mean        SD   Mean   SD   |
-    | -------- ------ --- --- ----------- ---- ------ ---- |
-    | 4        1      |   3   83.33       18.5 2.89   0.49 |
-    | 6        0      |   2   110.0       0.0  2.75   0.18 |
-    | 6        1      |   3   112.67      9.29 3.37   0.14 |
-    | ...      ...    ... ... ...         ...  ...    ...  |
+    |                 |     Horse Power      Weight      |
+    | Cylinder Engine | N   Mean        SD   Mean   SD   |
+    | -------- ------ - --- ----------- ---- ------ ---- |
+    | 4        1      | 3   83.33       18.5 2.89   0.49 |
+    | 6        0      | 2   110.0       0.0  2.75   0.18 |
+    | 6        1      | 3   112.67      9.29 3.37   0.14 |
+    | ...      ...    | ... ...         ...  ...    ...  |
     Data from the infamous mtcars data set.
     <BLANKLINE>
     """
@@ -355,16 +352,13 @@ class TableSpam:
         ...     footnote='Data from the infamous mtcars data set.',
         ... )
         >>> print(tbl.as_string())
-        Motor Trend Car Road Tests
-        A table created with tablespam
-        <BLANKLINE>
-        |                 |       Horse Power      Weight      |
-        | Cylinder Engine |   N   Mean        SD   Mean   SD   |
-        | -------- ------ --- --- ----------- ---- ------ ---- |
-        | 4        1      |   3   83.33       18.5 2.89   0.49 |
-        | 6        0      |   2   110.0       0.0  2.75   0.18 |
-        | 6        1      |   3   112.67      9.29 3.37   0.14 |
-        | ...      ...    ... ... ...         ...  ...    ...  |
+        |                 |     Horse Power      Weight      |
+        | Cylinder Engine | N   Mean        SD   Mean   SD   |
+        | -------- ------ - --- ----------- ---- ------ ---- |
+        | 4        1      | 3   83.33       18.5 2.89   0.49 |
+        | 6        0      | 2   110.0       0.0  2.75   0.18 |
+        | 6        1      | 3   112.67      9.29 3.37   0.14 |
+        | ...      ...    | ... ...         ...  ...    ...  |
         Data from the infamous mtcars data set.
         <BLANKLINE>
         """
@@ -490,16 +484,13 @@ class TableSpam:
         ...     footnote='Data from the infamous mtcars data set.',
         ... )
         >>> print(tbl.as_string())
-        Motor Trend Car Road Tests
-        A table created with tablespam
-        <BLANKLINE>
-        |                 |       Horse Power      Weight      |
-        | Cylinder Engine |   N   Mean        SD   Mean   SD   |
-        | -------- ------ --- --- ----------- ---- ------ ---- |
-        | 4        1      |   3   83.33       18.5 2.89   0.49 |
-        | 6        0      |   2   110.0       0.0  2.75   0.18 |
-        | 6        1      |   3   112.67      9.29 3.37   0.14 |
-        | ...      ...    ... ... ...         ...  ...    ...  |
+        |                 |     Horse Power      Weight      |
+        | Cylinder Engine | N   Mean        SD   Mean   SD   |
+        | -------- ------ - --- ----------- ---- ------ ---- |
+        | 4        1      | 3   83.33       18.5 2.89   0.49 |
+        | 6        0      | 2   110.0       0.0  2.75   0.18 |
+        | 6        1      | 3   112.67      9.29 3.37   0.14 |
+        | ...      ...    | ... ...         ...  ...    ...  |
         Data from the infamous mtcars data set.
         <BLANKLINE>
         """

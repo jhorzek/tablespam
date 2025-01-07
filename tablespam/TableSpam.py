@@ -169,6 +169,9 @@ class TableSpam:
     ...     footnote='Data from the infamous mtcars data set.',
     ... )
     >>> print(tbl.as_string())
+    Motor Trend Car Road Tests
+    A table created with tablespam
+    <BLANKLINE>
     |                 |     Horse Power      Weight      |
     | Cylinder Engine | N   Mean        SD   Mean   SD   |
     | -------- ------ - --- ----------- ---- ------ ---- |
@@ -352,6 +355,9 @@ class TableSpam:
         ...     footnote='Data from the infamous mtcars data set.',
         ... )
         >>> print(tbl.as_string())
+        Motor Trend Car Road Tests
+        A table created with tablespam
+        <BLANKLINE>
         |                 |     Horse Power      Weight      |
         | Cylinder Engine | N   Mean        SD   Mean   SD   |
         | -------- ------ - --- ----------- ---- ------ ---- |
@@ -484,6 +490,9 @@ class TableSpam:
         ...     footnote='Data from the infamous mtcars data set.',
         ... )
         >>> print(tbl.as_string())
+        Motor Trend Car Road Tests
+        A table created with tablespam
+        <BLANKLINE>
         |                 |     Horse Power      Weight      |
         | Cylinder Engine | N   Mean        SD   Mean   SD   |
         | -------- ------ - --- ----------- ---- ------ ---- |

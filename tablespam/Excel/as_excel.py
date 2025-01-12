@@ -58,14 +58,14 @@ def tbl_as_excel(
         styles=styles,
     )
 
-    # write_footnote(
-    #    tbl=tbl, workbook=workbook, sheet=sheet, locations=locations, styles=styles
-    # )
+    write_footnote(
+        tbl=tbl, workbook=workbook, sheet=sheet, locations=locations, styles=styles
+    )
 
     # We create the outlines last as we may have to overwrite some border colors.
-    # create_outlines(
-    #    tbl=tbl, workbook=workbook, sheet=sheet, locations=locations, styles=styles
-    # )
+    create_outlines(
+        tbl=tbl, workbook=workbook, sheet=sheet, locations=locations, styles=styles
+    )
 
     return workbook
 
@@ -173,7 +173,7 @@ def write_title(
             start_row=locations['row']['start_row_title'],
             start_column=locations['col']['start_col_title'],
             end_row=locations['row']['start_row_title'],
-            end_column=locations['col']['start_col_title'],
+            end_column=locations['col']['end_col_title'],
         )
         set_region_style(
             sheet=workbook[sheet],
@@ -181,7 +181,7 @@ def write_title(
             start_row=locations['row']['start_row_title'],
             start_col=locations['col']['start_col_title'],
             end_row=locations['row']['start_row_title'],
-            end_col=locations['col']['start_col_title'],
+            end_col=locations['col']['end_col_title'],
         )
 
     if tbl.subtitle is not None:
@@ -194,7 +194,7 @@ def write_title(
             start_row=locations['row']['start_row_subtitle'],
             start_column=locations['col']['start_col_subtitle'],
             end_row=locations['row']['start_row_subtitle'],
-            end_column=locations['col']['start_col_subtitle'],
+            end_column=locations['col']['end_col_subtitle'],
         )
         set_region_style(
             sheet=workbook[sheet],
@@ -202,7 +202,7 @@ def write_title(
             start_row=locations['row']['start_row_subtitle'],
             start_col=locations['col']['start_col_subtitle'],
             end_row=locations['row']['start_row_subtitle'],
-            end_col=locations['col']['start_col_subtitle'],
+            end_col=locations['col']['end_col_subtitle'],
         )
 
 
@@ -364,3 +364,97 @@ def write_data(
                     end_row=row,
                     end_col=col,
                 )
+
+
+def write_footnote(
+    tbl: TableSpam,
+    workbook: opy.Workbook,
+    sheet: str,
+    locations: dict[str, dict[str, int | None]],
+    styles: XlsxStyles,
+) -> None:
+    if tbl.footnote is None:
+        return
+
+    loc = get_column_interval(
+        start=locations['col']['start_col_footnote'],
+        end=locations['col']['start_col_footnote'],
+    )[0] + str(locations['row']['start_row_footnote'])
+    workbook[sheet][loc] = tbl.footnote
+    workbook[sheet].merge_cells(
+        start_row=locations['row']['start_row_footnote'],
+        start_column=locations['col']['start_col_footnote'],
+        end_row=locations['row']['start_row_footnote'],
+        end_column=locations['col']['end_col_footnote'],
+    )
+    set_region_style(
+        sheet=workbook[sheet],
+        style=styles.cell_footnote,
+        start_row=locations['row']['start_row_footnote'],
+        start_col=locations['col']['start_col_footnote'],
+        end_row=locations['row']['start_row_footnote'],
+        end_col=locations['col']['end_col_footnote'],
+    )
+
+
+def create_outlines(
+    tbl: TableSpam,
+    workbook: opy.Workbook,
+    sheet: str,
+    locations: dict[str, dict[str, int | None]],
+    styles: XlsxStyles,
+) -> None:
+    if tbl.header['lhs'] is not None:
+        left_most = locations['col']['start_col_header_lhs']
+    else:
+        left_most = locations['col']['start_col_header_rhs']
+
+    # top line
+    set_region_style(
+        sheet=workbook[sheet],
+        style=styles.hline,
+        start_row=locations['row']['start_row_header'],
+        start_col=left_most,
+        end_row=locations['row']['start_row_header'],
+        end_col=locations['col']['end_col_header_rhs'],
+    )
+
+    # bottom line
+    set_region_style(
+        sheet=workbook[sheet],
+        style=styles.hline,
+        start_row=locations['row']['end_row_data'] + 1,
+        start_col=left_most,
+        end_row=locations['row']['start_row_header'],
+        end_col=locations['col']['end_col_header_rhs'],
+    )
+
+    # left line
+    set_region_style(
+        sheet=workbook[sheet],
+        style=styles.vline,
+        start_row=locations['row']['start_row_header'],
+        start_col=left_most,
+        end_row=locations['row']['end_row_data'],
+        end_col=left_most,
+    )
+
+    # right line
+    set_region_style(
+        sheet=workbook[sheet],
+        style=styles.vline,
+        start_row=locations['row']['start_row_header'],
+        start_col=locations['col']['end_col_header_rhs'] + 1,
+        end_row=locations['row']['end_row_data'],
+        end_col=locations['col']['end_col_header_rhs'] + 1,
+    )
+
+    # row name separator
+    set_region_style(
+        sheet=workbook[sheet],
+        style=styles.vline,
+        start_row=locations['row']['start_row_header'],
+        start_col=locations['col']['start_col_header_rhs'],
+        end_row=locations['row']['end_row_data'],
+        end_col=locations['col']['start_col_header_rhs'],
+    )

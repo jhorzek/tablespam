@@ -79,20 +79,10 @@ class XlsxStyles:
     )
 
     cell_title: Callable[[Cell], None] = lambda c: (
-        setattr(c, 'font', opy.styles.Font(size=14, bold=True)),
-        setattr(
-            c,
-            'border',
-            opy.styles.borders.Border(left=opy.styles.borders.Side(style='thin')),
-        ),
+        setattr(c, 'font', opy.styles.Font(size=14, bold=True))
     )
     cell_subtitle: Callable[[Cell], None] = lambda c: (
-        setattr(c, 'font', opy.styles.Font(size=11, bold=True)),
-        setattr(
-            c,
-            'border',
-            opy.styles.borders.Border(left=opy.styles.borders.Side(style='thin')),
-        ),
+        setattr(c, 'font', opy.styles.Font(size=11, bold=True))
     )
     cell_header_lhs: Callable[[Cell], None] = lambda c: (
         setattr(c, 'font', opy.styles.Font(size=11, bold=True)),
@@ -127,7 +117,7 @@ class XlsxStyles:
         c, 'font', opy.styles.Font(size=11)
     )
     cell_footnote: Callable[[Cell], None] = lambda c: (
-        setattr(c, 'font', opy.styles.Font(size=11, bold=True)),
+        setattr(c, 'font', opy.styles.Font(size=11)),
         setattr(c, 'alignment', opy.styles.alignment.Alignment(horizontal='left')),
     )
 

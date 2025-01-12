@@ -1,4 +1,6 @@
-from __future__ import annotations  # noqa: D100
+"""Export a TableSpam table to Excel."""
+
+from __future__ import annotations
 from typing import TYPE_CHECKING, Callable, Any
 
 import openpyxl as opy
@@ -23,6 +25,19 @@ def tbl_as_excel(
     start_col: int = 1,
     styles: XlsxStyles | None = None,
 ) -> opy.Workbook:
+    """Export a TableSpam table to Excel.
+
+    Args:
+        tbl (TableSpam): TableSpam table created with TableSpam
+        workbook (opy.Workbook): openpyxl workbook
+        sheet (str, optional): name of the sheet to which the table should be added. Defaults to 'Table'.
+        start_row (int, optional): index of the row at which the table should start. Defaults to 1.
+        start_col (int, optional): index of the column at which the table should start. Defaults to 1.
+        styles (XlsxStyles | None, optional): Styles that should be applied to the table. Defaults to None.
+
+    Returns:
+        opy.Workbook: workbook with added table
+    """
     if styles is None:
         styles = XlsxStyles()
 
@@ -72,6 +87,15 @@ def fill_background(
     locations: dict[str, dict[str, int | None]],
     styles: XlsxStyles,
 ):
+    """Fill the background of the Excel table.
+
+    Args:
+        tbl (TableSpam): TableSpam table created with TableSpam
+        workbook (opy.Workbook): openpyxl workbook
+        sheet (str, optional): name of the sheet to which the table should be added. Defaults to 'Table'.
+        locations (dict[str, dict[str, int  |  None]]): a dict describing the locations (indexes) of different elements found in the table.
+        styles (XlsxStyles): Styles that should be applied to the table.
+    """
     sheet_ref = workbook[sheet]
 
     # Title
@@ -157,6 +181,15 @@ def write_title(
     locations: dict[str, dict[str, int | None]],
     styles: XlsxStyles,
 ):
+    """Write the title and subtitle to the Excel workbook.
+
+    Args:
+        tbl (TableSpam): TableSpam table created with TableSpam
+        workbook (opy.Workbook): openpyxl workbook
+        sheet (str, optional): name of the sheet to which the table should be added. Defaults to 'Table'.
+        locations (dict[str, dict[str, int  |  None]]): a dict describing the locations (indexes) of different elements found in the table.
+        styles (XlsxStyles): Styles that should be applied to the table.
+    """
     if tbl.title is not None:
         loc = get_column_interval(
             start=locations['col']['start_col_title'],
@@ -208,6 +241,15 @@ def write_header(
     locations: dict[str, dict[str, int | None]],
     styles: XlsxStyles,
 ):
+    """Fill the background of the Excel table.
+
+    Args:
+        workbook (opy.Workbook): openpyxl workbook
+        sheet (str): name of the sheet to which the table should be added. Defaults to 'Table'.
+        header (dict[str, HeaderEntry]): header information for right and left hand side of the table.
+        locations (dict[str, dict[str, int  |  None]]): a dict describing the locations (indexes) of different elements found in the table.
+        styles (XlsxStyles): Styles that should be applied to the table.
+    """
     if header['lhs'] is not None:
         max_level = max(header['lhs'].level, header['rhs'].level)
 
@@ -243,6 +285,17 @@ def write_header_entry(
     start_col: int,
     style: Callable[[Cell], None],
 ):
+    """Add a specific header entry to the Excel workbook.
+
+    Args:
+        workbook (opy.Workbook): openpyxl workbook
+        sheet (str): name of the sheet to which the table should be added. Defaults to 'Table'.
+        header_entry (HeaderEntry): specific header entry that will be added to the workbook.
+        max_level (int): The highest level of the header entries.
+        start_row (int): At what row should the current header entry be added?
+        start_col (int): At what column should the current header entry be added?
+        style (Callable[[Cell], None]): style to be added to the entry.
+    """
     # write current entry name into table
     if header_entry.name != '_BASE_LEVEL_':
         loc = get_column_interval(start=start_col, end=start_col)[0] + str(
@@ -283,6 +336,14 @@ def write_header_entry(
 
 
 def row_data_cell_ids(row_data: pl.DataFrame) -> np.ndarray[Any]:
+    """Generate unique IDs to represent entries that should be merged.
+
+    Args:
+        row_data (pl.DataFrame): data that is written as rownames in the table.
+
+    Returns:
+        np.ndarray[Any]: a matrix with the same number of rows and columns as the row_data. Each entry is given an index. If two cells should be merged, they will have the same index.
+    """
     ids = np.full(
         (row_data.shape[0], row_data.shape[1]),
         np.nan,
@@ -310,6 +371,15 @@ def merge_rownames(
     locations: dict[str, dict[str, int | None]],
     styles: XlsxStyles,
 ) -> None:
+    """Merges consecutive rownames that are identical into a common cell.
+
+    Args:
+        workbook (opy.Workbook): openpyxl workbook
+        sheet (str): name of the sheet to which the table should be added. Defaults to 'Table'.
+        table_data (dict[str, pl.DataFrame]): Data that should be written into the table body.
+        locations (dict[str, dict[str, int  |  None]]): a dict describing the locations (indexes) of different elements found in the table.
+        styles (XlsxStyles): Styles that should be applied to the table.
+    """
     cell_ids = row_data_cell_ids(table_data['row_data'])
 
     # We merge all cells within a column that have the same id.
@@ -350,6 +420,21 @@ def write_data(
     locations: dict[str, dict[str, int | None]],
     styles: XlsxStyles,
 ):
+    """Write the data into the table body.
+
+    Args:
+        tbl (TableSpam): TableSpam table created with TableSpam
+        workbook (opy.Workbook): openpyxl workbook
+        sheet (str, optional): name of the sheet to which the table should be added. Defaults to 'Table'.
+        header (dict[str, HeaderEntry]): header information for right and left hand side of the table.
+        table_data (dict[str, pl.DataFrame]): data that should be written into the table body.
+        locations (dict[str, dict[str, int  |  None]]): a dict describing the locations (indexes) of different elements found in the table.
+        styles (XlsxStyles): Styles that should be applied to the table.
+
+    Raises:
+        ValueError: Error when trying to add a style to a column that does not exist.
+        ValueError: Error when trying to add a style to a row that does not exist.
+    """
     if header['lhs'] is not None:
         # Add row names and their styling
         i = 0
@@ -418,6 +503,15 @@ def write_footnote(
     locations: dict[str, dict[str, int | None]],
     styles: XlsxStyles,
 ) -> None:
+    """Adds the footnote to the table.
+
+    Args:
+        tbl (TableSpam): TableSpam table created with TableSpam
+        workbook (opy.Workbook): openpyxl workbook
+        sheet (str, optional): name of the sheet to which the table should be added. Defaults to 'Table'.
+        locations (dict[str, dict[str, int  |  None]]): a dict describing the locations (indexes) of different elements found in the table.
+        styles (XlsxStyles): Styles that should be applied to the table.
+    """
     if tbl.footnote is None:
         return
 
@@ -449,6 +543,15 @@ def create_outlines(
     locations: dict[str, dict[str, int | None]],
     styles: XlsxStyles,
 ) -> None:
+    """Adds vertical and horizontal lines in the table.
+
+    Args:
+        tbl (TableSpam): TableSpam table created with TableSpam
+        workbook (opy.Workbook): openpyxl workbook
+        sheet (str, optional): name of the sheet to which the table should be added. Defaults to 'Table'.
+        locations (dict[str, dict[str, int  |  None]]): a dict describing the locations (indexes) of different elements found in the table.
+        styles (XlsxStyles): Styles that should be applied to the table.
+    """
     if tbl.header['lhs'] is not None:
         left_most = locations['col']['start_col_header_lhs']
     else:

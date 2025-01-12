@@ -18,14 +18,18 @@ cars = pl.DataFrame(
     }
 )
 
-summarized_table = cars.group_by(['cyl', 'vs']).agg(
-    [
-        pl.len().alias('N'),
-        pl.col('hp').mean().alias('mean_hp'),
-        pl.col('hp').std().alias('sd_hp'),
-        pl.col('wt').mean().alias('mean_wt'),
-        pl.col('wt').std().alias('sd_wt'),
-    ]
+summarized_table = (
+    cars.group_by(['cyl', 'vs'])
+    .agg(
+        [
+            pl.len().alias('N'),
+            pl.col('hp').mean().alias('mean_hp'),
+            pl.col('hp').std().alias('sd_hp'),
+            pl.col('wt').mean().alias('mean_wt'),
+            pl.col('wt').std().alias('sd_wt'),
+        ]
+    )
+    .sort(pl.col('cyl'))
 )
 
 tbl = TableSpam(
@@ -37,7 +41,7 @@ tbl = TableSpam(
     title='Motor Trend Car Road Tests',
     subtitle='A table created with tablespan',
     footnote='Data from the infamous mtcars data set.',
-).as_excel(styles=XlsxStyles(merge_rownames=False))
+).as_excel(styles=XlsxStyles(merge_rownames=True))
 
 tbl.save('test.xlsx')
 print(1)

@@ -680,8 +680,15 @@ class TableSpam:
     ) -> opy.Workbook:
         if workbook is None:
             workbook = opy.Workbook()
+            # openpyxl automatically adds a default sheet
+            # that we will remove
+            if 'Sheet' in workbook.sheetnames:
+                workbook.remove(workbook['Sheet'])
         if styles is None:
             styles = XlsxStyles()
+        if sheet not in workbook.sheetnames:
+            workbook.create_sheet(title=sheet)
+
         wb = tbl_as_excel(
             tbl=self,
             workbook=workbook,

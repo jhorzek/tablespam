@@ -1,5 +1,5 @@
 from __future__ import annotations  # noqa: D100
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Any
 
 import openpyxl as opy
 from openpyxl.utils import get_column_interval
@@ -8,7 +8,7 @@ import polars as pl
 from tablespam.Excel.write_excel import write_excel_col
 from tablespam.Excel.xlsx_styles import XlsxStyles, set_region_style
 from tablespam.Excel.locations import get_locations
-
+import numpy as np
 
 if TYPE_CHECKING:
     from tablespam.TableSpam import TableSpam
@@ -17,19 +17,14 @@ if TYPE_CHECKING:
 
 def tbl_as_excel(
     tbl: TableSpam,
-    workbook: opy.Workbook | None = None,
+    workbook: opy.Workbook,
     sheet: str = 'Table',
     start_row: int = 1,
     start_col: int = 1,
     styles: XlsxStyles | None = None,
 ) -> opy.Workbook:
-    if workbook is None:
-        workbook = opy.Workbook()
     if styles is None:
         styles = XlsxStyles()
-
-    if isinstance(sheet, str) and (sheet not in workbook.sheetnames):
-        workbook.create_sheet(title=sheet)
 
     locations = get_locations(tbl=tbl, start_row=start_row, start_col=start_col)
 
@@ -206,16 +201,6 @@ def write_title(
         )
 
 
-def merge_rownames(
-    workbook: opy.Workbook,
-    sheet: str,
-    header: dict[str, HeaderEntry],
-    locations: dict[str, dict[str, int | None]],
-    styles: XlsxStyles,
-):
-    raise ValueError('Merging of row names not yet implemented.')
-
-
 def write_header(
     workbook: opy.Workbook,
     sheet: str,
@@ -295,6 +280,66 @@ def write_header_entry(
             style=style,
         )
         start_col_entry += entry.width
+
+
+def row_data_cell_ids(row_data: pl.DataFrame) -> np.ndarray[Any]:
+    ids = np.full(
+        (row_data.shape[0], row_data.shape[1]),
+        np.nan,
+        dtype=np.uint8,
+    )
+    ids[0, :] = 1
+    if row_data.shape[0] == 1:
+        return ids
+
+    for ro in range(1, row_data.shape[0]):
+        for co in range(0, row_data.shape[1]):
+            if row_data[ro, range(0, co + 1)].equals(
+                row_data[ro - 1, range(0, co + 1)]
+            ):
+                ids[ro, co] = ids[ro - 1, co]
+            else:
+                ids[ro, co] = ids[ro - 1, co] + 1
+    return ids
+
+
+def merge_rownames(
+    workbook: opy.Workbook,
+    sheet: str,
+    table_data: dict[str, pl.DataFrame],
+    locations: dict[str, dict[str, int | None]],
+    styles: XlsxStyles,
+) -> None:
+    cell_ids = row_data_cell_ids(table_data['row_data'])
+
+    # We merge all cells within a column that have the same id.
+    for co in range(0, table_data['row_data'].shape[1]):
+        unique_ids = set(cell_ids[:, co])
+        for id in unique_ids:
+            is_identical = [x == id for x in cell_ids[:, co]]
+            if sum(is_identical) > 1:
+                set_region_style(
+                    sheet=workbook[sheet],
+                    style=styles.merged_rownames_style,
+                    start_row=locations['row']['end_row_header']
+                    + np.min(np.where(is_identical))
+                    + 1,
+                    start_col=locations['col']['start_col_header_lhs'] + co,
+                    end_row=locations['row']['end_row_header']
+                    + np.max(np.where(is_identical))
+                    + 1,
+                    end_col=locations['col']['start_col_header_lhs'] + co,
+                )
+                workbook[sheet].merge_cells(
+                    start_row=locations['row']['end_row_header']
+                    + np.min(np.where(is_identical))
+                    + 1,
+                    start_column=locations['col']['start_col_header_lhs'] + co,
+                    end_row=locations['row']['end_row_header']
+                    + np.max(np.where(is_identical))
+                    + 1,
+                    end_column=locations['col']['start_col_header_lhs'] + co,
+                )
 
 
 def write_data(
@@ -425,7 +470,7 @@ def create_outlines(
         style=styles.hline,
         start_row=locations['row']['end_row_data'] + 1,
         start_col=left_most,
-        end_row=locations['row']['start_row_header'],
+        end_row=locations['row']['end_row_data'] + 1,
         end_col=locations['col']['end_col_header_rhs'],
     )
 

@@ -6,6 +6,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.utils import get_column_interval
 from openpyxl.cell.cell import Cell
 import polars as pl
+from copy import copy
 
 
 def set_region_style(
@@ -40,20 +41,40 @@ def default_data_styles() -> dict[DataStyle]:
     def test_double(x: pl.DataFrame):
         if len(x.columns) != 1:
             raise ValueError('Multiple columns passed to test.')
-        return x.dtypes in [pl.Float32, pl.Float64]
+        return all([tp in [pl.Float32, pl.Float64] for tp in x.dtypes])
 
     return {
         'double': DataStyle(
             test=test_double,
-            style=lambda c: setattr(c, 'number_format', '0.00E'),
+            style=lambda c: setattr(c, 'number_format', '0.00'),
         ),
     }
+
+
+def set_border(
+    c: Cell,
+    color: str,
+    left: None | str = None,
+    right: None | str = None,
+    top: None | str = None,
+    bottom: None | str = None,
+):
+    border = copy(c.border)
+    if left is not None:
+        border.left = opy.styles.borders.Side(style=left, color=color)
+    if right is not None:
+        border.right = opy.styles.borders.Side(style=right, color=color)
+    if top is not None:
+        border.top = opy.styles.borders.Side(style=top, color=color)
+    if bottom is not None:
+        border.bottom = opy.styles.borders.Side(style=bottom, color=color)
+    c.border = border
 
 
 @dataclass
 class XlsxStyles:
     bg_default: Callable[[Cell], None] = lambda c: setattr(
-        c, 'fill', opy.styles.PatternFill(bgColor='FFFFFFFF')
+        c, 'fill', opy.styles.PatternFill(start_color='FFFFFF', fill_type='solid')
     )
     bg_title: Callable[[Cell], None] = bg_default
     bg_subtitle: Callable[[Cell], None] = bg_default
@@ -63,19 +84,12 @@ class XlsxStyles:
     bg_data: Callable[[Cell], None] = bg_default
     bg_footnote: Callable[[Cell], None] = bg_default
 
-    vline: Callable[[Cell], None] = lambda c: setattr(
-        c,
-        'border',
-        opy.styles.borders.Border(
-            left=opy.styles.borders.Side(style='thin', color='FF000000')
-        ),
+    vline: Callable[[Cell], None] = lambda c: set_border(
+        c=c, color='FF000000', left='thin'
     )
-    hline: Callable[[Cell], None] = lambda c: setattr(
-        c,
-        'border',
-        opy.styles.borders.Border(
-            top=opy.styles.borders.Side(style='thin', color='FF000000')
-        ),
+
+    hline: Callable[[Cell], None] = lambda c: set_border(
+        c=c, color='FF000000', top='thin'
     )
 
     cell_title: Callable[[Cell], None] = lambda c: (
@@ -122,11 +136,10 @@ class XlsxStyles:
     )
 
     merge_rownames: bool = True
-    merged_rownames_style: Callable[[Cell], None] = (
-        lambda c: setattr(
-            c, 'alignment', opy.styles.alignment.Alignment(vertical='top')
-        ),
+    merged_rownames_style: Callable[[Cell], None] = lambda c: setattr(
+        c, 'alignment', opy.styles.alignment.Alignment(vertical='top')
     )
+
     footnote_style: Callable[[Cell], None] = lambda c: (
         setattr(c, 'font', opy.styles.Font(size=11, bold=True)),
         setattr(c, 'alignment', opy.styles.alignment.Alignment(horizontal='left')),

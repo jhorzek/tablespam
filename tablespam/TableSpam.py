@@ -4,7 +4,8 @@ from tablespam.Formulas import Formula
 from tablespam.as_string import tbl_as_string
 import polars as pl
 import great_tables as gt
-from tablespam.as_gt import (
+import openpyxl as opy
+from tablespam.GT.as_gt import (
     add_gt_spanners,
     add_gt_rowname_separator,
     add_gt_titles,
@@ -12,6 +13,8 @@ from tablespam.as_gt import (
     FormattingFunction,
     default_formatting,
 )
+from tablespam.Excel.xlsx_styles import XlsxStyles
+from tablespam.Excel.as_excel import tbl_as_excel
 
 
 class TableSpam:
@@ -666,6 +669,28 @@ class TableSpam:
             gt_tbl = default_formatting(gt_tbl)
 
         return gt_tbl
+
+    def as_excel(
+        self,
+        workbook: opy.Workbook | None = None,
+        sheet: str = 'Table',
+        start_row: int = 1,
+        start_col: int = 1,
+        styles: XlsxStyles | None = None,
+    ) -> opy.Workbook:
+        if workbook is None:
+            workbook = opy.Workbook()
+        if styles is None:
+            styles = XlsxStyles()
+        wb = tbl_as_excel(
+            tbl=self,
+            workbook=workbook,
+            sheet=sheet,
+            start_row=start_row,
+            start_col=start_col,
+            styles=styles,
+        )
+        return wb
 
 
 def select_data(data: pl.DataFrame, variables: list[str]) -> pl.DataFrame | None:

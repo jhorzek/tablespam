@@ -7,9 +7,9 @@ import openpyxl as opy
 from openpyxl.utils import get_column_interval
 from openpyxl.cell.cell import Cell
 import polars as pl
-from tablespam.Excel.write_excel import write_excel_col
+from tablespam.Excel._as_excel.write_excel import write_excel_col
 from tablespam.Excel.xlsx_styles import XlsxStyles, set_region_style
-from tablespam.Excel.locations import get_locations
+from tablespam.Excel._as_excel.locations import get_locations
 import numpy as np
 
 if TYPE_CHECKING:
@@ -480,20 +480,20 @@ def write_data(
                 raise ValueError(
                     f"Trying to style an element that was not found in the data: {[c for c in sty.cols if c not in table_data["col_data"].columns]}."
                 )
-            if any(sty.rows > table_data['col_data'].shape[0]):
+            if any([r > table_data['col_data'].shape[0] for r in sty.rows]):
                 raise ValueError(
                     'Trying to style a row outside of the range of the data.'
                 )
-        for col in sty.cols:
-            for row in sty.rows:
-                set_region_style(
-                    sheet=workbook[sheet],
-                    style=sty.style,
-                    start_row=row,
-                    start_col=col,
-                    end_row=row,
-                    end_col=col,
-                )
+            for col in sty.cols:
+                for row in sty.rows:
+                    set_region_style(
+                        sheet=workbook[sheet],
+                        style=sty.style,
+                        start_row=locations["row"]["start_row_data"] + row - 1,
+                        start_col=locations["col"]["start_col_header_rhs"] + table_data['col_data'].columns.index(col),
+                        end_row=locations["row"]["start_row_data"] + row - 1,
+                        end_col=locations["col"]["start_col_header_rhs"] + table_data['col_data'].columns.index(col),
+                    )
 
 
 def write_footnote(

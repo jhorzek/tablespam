@@ -346,7 +346,7 @@ def row_data_cell_ids(row_data: pl.DataFrame) -> np.ndarray[Any, Any]:
     """
     ids = np.full(
         (row_data.shape[0], row_data.shape[1]),
-        np.nan,
+        0,
         dtype=np.uint8,
     )
     ids[0, :] = 1

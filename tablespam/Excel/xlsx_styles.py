@@ -8,7 +8,6 @@ from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.utils import get_column_interval
 from openpyxl.cell.cell import Cell
 import polars as pl
-from copy import copy
 
 
 def set_region_style(

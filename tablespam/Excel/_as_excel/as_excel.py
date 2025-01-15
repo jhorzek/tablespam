@@ -491,7 +491,7 @@ def write_data(
         for sty in styles.cell_styles:
             if not set(sty.cols).issubset(set(table_data['col_data'].columns)):
                 raise ValueError(
-                    f"Trying to style an element that was not found in the data: {[c for c in sty.cols if c not in table_data["col_data"].columns]}."
+                    f"Trying to style an element that was not found in the data: {[(c) for c in sty.cols if c not in table_data['col_data'].columns]}."
                 )
             if any([r > table_data['col_data'].shape[0] for r in sty.rows]):
                 raise ValueError(

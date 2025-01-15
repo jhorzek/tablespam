@@ -1,7 +1,7 @@
 """Export a TableSpam table to Excel."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Callable, Any
+from typing import TYPE_CHECKING, Callable, Any, cast
 
 import openpyxl as opy
 from openpyxl.utils import get_column_interval
@@ -9,7 +9,7 @@ from openpyxl.cell.cell import Cell
 import polars as pl
 from tablespam.Excel._as_excel.write_excel import write_excel_col
 from tablespam.Excel.xlsx_styles import XlsxStyles, set_region_style
-from tablespam.Excel._as_excel.locations import get_locations
+from tablespam.Excel._as_excel.locations import Locations
 import numpy as np
 
 if TYPE_CHECKING:
@@ -41,7 +41,7 @@ def tbl_as_excel(
     if styles is None:
         styles = XlsxStyles()
 
-    locations = get_locations(tbl=tbl, start_row=start_row, start_col=start_col)
+    locations = Locations(tbl=tbl, start_row=start_row, start_col=start_col)
 
     fill_background(
         tbl=tbl, workbook=workbook, sheet=sheet, locations=locations, styles=styles
@@ -84,9 +84,9 @@ def fill_background(
     tbl: TableSpam,
     workbook: opy.Workbook,
     sheet: str,
-    locations: dict[str, dict[str, int | None]],
+    locations: Locations,
     styles: XlsxStyles,
-):
+) -> None:
     """Fill the background of the Excel table.
 
     Args:
@@ -103,10 +103,10 @@ def fill_background(
         set_region_style(
             sheet=sheet_ref,
             style=styles.bg_title,
-            start_col=locations['col']['start_col_title'],
-            end_col=locations['col']['end_col_title'],
-            start_row=locations['row']['start_row_title'],
-            end_row=locations['row']['end_row_title'],
+            start_col=locations.get_col('start_col_title'),
+            end_col=locations.get_col('end_col_title'),
+            start_row=locations.get_row('start_row_title'),
+            end_row=locations.get_row('end_row_title'),
         )
 
     # Subtitle
@@ -114,10 +114,10 @@ def fill_background(
         set_region_style(
             sheet=sheet_ref,
             style=styles.bg_subtitle,
-            start_col=locations['col']['start_col_subtitle'],
-            end_col=locations['col']['end_col_subtitle'],
-            start_row=locations['row']['start_row_subtitle'],
-            end_row=locations['row']['end_row_subtitle'],
+            start_col=locations.get_col('start_col_subtitle'),
+            end_col=locations.get_col('end_col_subtitle'),
+            start_row=locations.get_row('start_row_subtitle'),
+            end_row=locations.get_row('end_row_subtitle'),
         )
 
     # Header LHS
@@ -125,20 +125,20 @@ def fill_background(
         set_region_style(
             sheet=sheet_ref,
             style=styles.bg_header_lhs,
-            start_col=locations['col']['start_col_header_lhs'],
-            end_col=locations['col']['end_col_header_lhs'],
-            start_row=locations['row']['start_row_header'],
-            end_row=locations['row']['end_row_header'],
+            start_col=locations.get_col('start_col_header_lhs'),
+            end_col=locations.get_col('end_col_header_lhs'),
+            start_row=locations.get_row('start_row_header'),
+            end_row=locations.get_row('end_row_header'),
         )
 
     # Header RHS
     set_region_style(
         sheet=sheet_ref,
         style=styles.bg_header_rhs,
-        start_col=locations['col']['start_col_header_rhs'],
-        end_col=locations['col']['end_col_header_rhs'],
-        start_row=locations['row']['start_row_header'],
-        end_row=locations['row']['end_row_header'],
+        start_col=locations.get_col('start_col_header_rhs'),
+        end_col=locations.get_col('end_col_header_rhs'),
+        start_row=locations.get_row('start_row_header'),
+        end_row=locations.get_row('end_row_header'),
     )
 
     # Rownames
@@ -146,20 +146,20 @@ def fill_background(
         set_region_style(
             sheet=sheet_ref,
             style=styles.bg_rownames,
-            start_col=locations['col']['start_col_header_lhs'],
-            end_col=locations['col']['end_col_header_lhs'],
-            start_row=locations['row']['start_row_data'],
-            end_row=locations['row']['end_row_data'],
+            start_col=locations.get_col('start_col_header_lhs'),
+            end_col=locations.get_col('end_col_header_lhs'),
+            start_row=locations.get_row('start_row_data'),
+            end_row=locations.get_row('end_row_data'),
         )
 
     # Data
     set_region_style(
         sheet=sheet_ref,
         style=styles.bg_data,
-        start_col=locations['col']['start_col_header_rhs'],
-        end_col=locations['col']['end_col_header_rhs'],
-        start_row=locations['row']['start_row_data'],
-        end_row=locations['row']['end_row_data'],
+        start_col=locations.get_col('start_col_header_rhs'),
+        end_col=locations.get_col('end_col_header_rhs'),
+        start_row=locations.get_row('start_row_data'),
+        end_row=locations.get_row('end_row_data'),
     )
 
     # Footnote
@@ -167,10 +167,10 @@ def fill_background(
         set_region_style(
             sheet=sheet_ref,
             style=styles.bg_footnote,
-            start_col=locations['col']['start_col_footnote'],
-            end_col=locations['col']['end_col_footnote'],
-            start_row=locations['row']['start_row_footnote'],
-            end_row=locations['row']['end_row_footnote'],
+            start_col=locations.get_col('start_col_footnote'),
+            end_col=locations.get_col('end_col_footnote'),
+            start_row=locations.get_row('start_row_footnote'),
+            end_row=locations.get_row('end_row_footnote'),
         )
 
 
@@ -178,9 +178,9 @@ def write_title(
     tbl: TableSpam,
     workbook: opy.Workbook,
     sheet: str,
-    locations: dict[str, dict[str, int | None]],
+    locations: Locations,
     styles: XlsxStyles,
-):
+) -> None:
     """Write the title and subtitle to the Excel workbook.
 
     Args:
@@ -192,45 +192,45 @@ def write_title(
     """
     if tbl.title is not None:
         loc = get_column_interval(
-            start=locations['col']['start_col_title'],
-            end=locations['col']['start_col_title'],
-        )[0] + str(locations['row']['start_row_title'])
+            start=locations.get_col('start_col_title'),
+            end=locations.get_col('start_col_title'),
+        )[0] + str(locations.get_row('start_row_title'))
         workbook[sheet][loc] = tbl.title
 
         workbook[sheet].merge_cells(
-            start_row=locations['row']['start_row_title'],
-            start_column=locations['col']['start_col_title'],
-            end_row=locations['row']['start_row_title'],
-            end_column=locations['col']['end_col_title'],
+            start_row=locations.get_row('start_row_title'),
+            start_column=locations.get_col('start_col_title'),
+            end_row=locations.get_row('start_row_title'),
+            end_column=locations.get_col('end_col_title'),
         )
         set_region_style(
             sheet=workbook[sheet],
             style=styles.cell_title,
-            start_row=locations['row']['start_row_title'],
-            start_col=locations['col']['start_col_title'],
-            end_row=locations['row']['start_row_title'],
-            end_col=locations['col']['end_col_title'],
+            start_row=locations.get_row('start_row_title'),
+            start_col=locations.get_col('start_col_title'),
+            end_row=locations.get_row('start_row_title'),
+            end_col=locations.get_col('end_col_title'),
         )
 
     if tbl.subtitle is not None:
         loc = get_column_interval(
-            start=locations['col']['start_col_subtitle'],
-            end=locations['col']['start_col_subtitle'],
-        )[0] + str(locations['row']['start_row_subtitle'])
+            start=locations.get_col('start_col_subtitle'),
+            end=locations.get_col('start_col_subtitle'),
+        )[0] + str(locations.get_row('start_row_subtitle'))
         workbook[sheet][loc] = tbl.subtitle
         workbook[sheet].merge_cells(
-            start_row=locations['row']['start_row_subtitle'],
-            start_column=locations['col']['start_col_subtitle'],
-            end_row=locations['row']['start_row_subtitle'],
-            end_column=locations['col']['end_col_subtitle'],
+            start_row=locations.get_row('start_row_subtitle'),
+            start_column=locations.get_col('start_col_subtitle'),
+            end_row=locations.get_row('start_row_subtitle'),
+            end_column=locations.get_col('end_col_subtitle'),
         )
         set_region_style(
             sheet=workbook[sheet],
             style=styles.cell_subtitle,
-            start_row=locations['row']['start_row_subtitle'],
-            start_col=locations['col']['start_col_subtitle'],
-            end_row=locations['row']['start_row_subtitle'],
-            end_col=locations['col']['end_col_subtitle'],
+            start_row=locations.get_row('start_row_subtitle'),
+            start_col=locations.get_col('start_col_subtitle'),
+            end_row=locations.get_row('start_row_subtitle'),
+            end_col=locations.get_col('end_col_subtitle'),
         )
 
 
@@ -238,9 +238,9 @@ def write_header(
     workbook: opy.Workbook,
     sheet: str,
     header: dict[str, HeaderEntry],
-    locations: dict[str, dict[str, int | None]],
+    locations: Locations,
     styles: XlsxStyles,
-):
+) -> None:
     """Fill the background of the Excel table.
 
     Args:
@@ -258,8 +258,8 @@ def write_header(
             sheet=sheet,
             header_entry=header['lhs'],
             max_level=max_level,
-            start_row=locations['row']['start_row_header'],
-            start_col=locations['col']['start_col_header_lhs'],
+            start_row=locations.get_row('start_row_header'),
+            start_col=locations.get_col('start_col_header_lhs'),
             style=styles.cell_header_lhs,
         )
     else:
@@ -270,8 +270,8 @@ def write_header(
         sheet=sheet,
         header_entry=header['rhs'],
         max_level=max_level,
-        start_row=locations['row']['start_row_header'],
-        start_col=locations['col']['start_col_header_rhs'],
+        start_row=locations.get_row('start_row_header'),
+        start_col=locations.get_col('start_col_header_rhs'),
         style=styles.cell_header_rhs,
     )
 
@@ -284,7 +284,7 @@ def write_header_entry(
     start_row: int,
     start_col: int,
     style: Callable[[Cell], None],
-):
+) -> None:
     """Add a specific header entry to the Excel workbook.
 
     Args:
@@ -335,7 +335,7 @@ def write_header_entry(
         start_col_entry += entry.width
 
 
-def row_data_cell_ids(row_data: pl.DataFrame) -> np.ndarray[Any]:
+def row_data_cell_ids(row_data: pl.DataFrame) -> np.ndarray[Any, Any]:
     """Generate unique IDs to represent entries that should be merged.
 
     Args:
@@ -367,8 +367,8 @@ def row_data_cell_ids(row_data: pl.DataFrame) -> np.ndarray[Any]:
 def merge_rownames(
     workbook: opy.Workbook,
     sheet: str,
-    table_data: dict[str, pl.DataFrame],
-    locations: dict[str, dict[str, int | None]],
+    table_data: dict[str, pl.DataFrame | None],
+    locations: Locations,
     styles: XlsxStyles,
 ) -> None:
     """Merges consecutive rownames that are identical into a common cell.
@@ -379,7 +379,12 @@ def merge_rownames(
         table_data (dict[str, pl.DataFrame]): Data that should be written into the table body.
         locations (dict[str, dict[str, int  |  None]]): a dict describing the locations (indexes) of different elements found in the table.
         styles (XlsxStyles): Styles that should be applied to the table.
+
+    Raises:
+        ValueError: Error if data frame is None
     """
+    if table_data['row_data'] is None:
+        raise ValueError("table_data['row_data'] is None.")
     cell_ids = row_data_cell_ids(table_data['row_data'])
 
     # We merge all cells within a column that have the same id.
@@ -391,24 +396,26 @@ def merge_rownames(
                 set_region_style(
                     sheet=workbook[sheet],
                     style=styles.merged_rownames_style,
-                    start_row=locations['row']['end_row_header']
-                    + np.min(np.where(is_identical))
+                    start_row=locations.get_row('end_row_header')
+                    + cast(int, np.min(np.where(is_identical)))
                     + 1,
-                    start_col=locations['col']['start_col_header_lhs'] + co,
-                    end_row=locations['row']['end_row_header']
-                    + np.max(np.where(is_identical))
+                    start_col=locations.get_col('start_col_header_lhs') + cast(int, co),
+                    end_row=locations.get_row('end_row_header')
+                    + cast(int, np.max(np.where(is_identical)))
                     + 1,
-                    end_col=locations['col']['start_col_header_lhs'] + co,
+                    end_col=locations.get_col('start_col_header_lhs') + cast(int, co),
                 )
                 workbook[sheet].merge_cells(
-                    start_row=locations['row']['end_row_header']
-                    + np.min(np.where(is_identical))
+                    start_row=locations.get_row('end_row_header')
+                    + cast(int, np.min(np.where(is_identical)))
                     + 1,
-                    start_column=locations['col']['start_col_header_lhs'] + co,
-                    end_row=locations['row']['end_row_header']
-                    + np.max(np.where(is_identical))
+                    start_column=locations.get_col('start_col_header_lhs')
+                    + cast(int, co),
+                    end_row=locations.get_row('end_row_header')
+                    + cast(int, np.max(np.where(is_identical)))
                     + 1,
-                    end_column=locations['col']['start_col_header_lhs'] + co,
+                    end_column=locations.get_col('start_col_header_lhs')
+                    + cast(int, co),
                 )
 
 
@@ -416,10 +423,10 @@ def write_data(
     workbook: opy.Workbook,
     sheet: str,
     header: dict[str, HeaderEntry],
-    table_data: dict[str, pl.DataFrame],
-    locations: dict[str, dict[str, int | None]],
+    table_data: dict[str, pl.DataFrame | None],
+    locations: Locations,
     styles: XlsxStyles,
-):
+) -> None:
     """Write the data into the table body.
 
     Args:
@@ -432,10 +439,14 @@ def write_data(
         styles (XlsxStyles): Styles that should be applied to the table.
 
     Raises:
+        ValueError: Error when row data does not exist.
+        ValueError: Error when data does not exist.
         ValueError: Error when trying to add a style to a column that does not exist.
         ValueError: Error when trying to add a style to a row that does not exist.
     """
     if header['lhs'] is not None:
+        if table_data['row_data'] is None:
+            raise ValueError('Missing data')
         # Add row names and their styling
         i = 0
         for item in table_data['row_data'].columns:
@@ -443,8 +454,8 @@ def write_data(
                 workbook=workbook,
                 sheet=sheet,
                 data=table_data['row_data'].select(item),
-                row_start=locations['row']['end_row_header'] + 1,
-                col_start=locations['col']['start_col_header_lhs'] + i,
+                row_start=locations.get_row('end_row_header') + 1,
+                col_start=locations.get_col('start_col_header_lhs') + i,
                 base_style=styles.cell_rownames,
                 data_styles=styles.data_styles,
             )
@@ -460,14 +471,16 @@ def write_data(
             )
 
     # Write the actual data itself
+    if table_data['col_data'] is None:
+        raise ValueError('Missing data')
     i = 0
     for item in table_data['col_data'].columns:
         write_excel_col(
             workbook=workbook,
             sheet=sheet,
             data=table_data['col_data'].select(item),
-            row_start=locations['row']['end_row_header'] + 1,
-            col_start=locations['col']['start_col_header_rhs'] + i,
+            row_start=locations.get_row('end_row_header') + 1,
+            col_start=locations.get_col('start_col_header_rhs') + i,
             base_style=styles.cell_data,
             data_styles=styles.data_styles,
         )
@@ -489,10 +502,12 @@ def write_data(
                     set_region_style(
                         sheet=workbook[sheet],
                         style=sty.style,
-                        start_row=locations["row"]["start_row_data"] + row - 1,
-                        start_col=locations["col"]["start_col_header_rhs"] + table_data['col_data'].columns.index(col),
-                        end_row=locations["row"]["start_row_data"] + row - 1,
-                        end_col=locations["col"]["start_col_header_rhs"] + table_data['col_data'].columns.index(col),
+                        start_row=locations.get_row('start_row_data') + row - 1,
+                        start_col=locations.get_col('start_col_header_rhs')
+                        + table_data['col_data'].columns.index(col),
+                        end_row=locations.get_row('start_row_data') + row - 1,
+                        end_col=locations.get_col('start_col_header_rhs')
+                        + table_data['col_data'].columns.index(col),
                     )
 
 
@@ -500,7 +515,7 @@ def write_footnote(
     tbl: TableSpam,
     workbook: opy.Workbook,
     sheet: str,
-    locations: dict[str, dict[str, int | None]],
+    locations: Locations,
     styles: XlsxStyles,
 ) -> None:
     """Adds the footnote to the table.
@@ -516,23 +531,23 @@ def write_footnote(
         return
 
     loc = get_column_interval(
-        start=locations['col']['start_col_footnote'],
-        end=locations['col']['start_col_footnote'],
-    )[0] + str(locations['row']['start_row_footnote'])
+        start=locations.get_col('start_col_footnote'),
+        end=locations.get_col('start_col_footnote'),
+    )[0] + str(locations.get_row('start_row_footnote'))
     workbook[sheet][loc] = tbl.footnote
     workbook[sheet].merge_cells(
-        start_row=locations['row']['start_row_footnote'],
-        start_column=locations['col']['start_col_footnote'],
-        end_row=locations['row']['start_row_footnote'],
-        end_column=locations['col']['end_col_footnote'],
+        start_row=locations.get_row('start_row_footnote'),
+        start_column=locations.get_col('start_col_footnote'),
+        end_row=locations.get_row('start_row_footnote'),
+        end_column=locations.get_col('end_col_footnote'),
     )
     set_region_style(
         sheet=workbook[sheet],
         style=styles.cell_footnote,
-        start_row=locations['row']['start_row_footnote'],
-        start_col=locations['col']['start_col_footnote'],
-        end_row=locations['row']['start_row_footnote'],
-        end_col=locations['col']['end_col_footnote'],
+        start_row=locations.get_row('start_row_footnote'),
+        start_col=locations.get_col('start_col_footnote'),
+        end_row=locations.get_row('start_row_footnote'),
+        end_col=locations.get_col('end_col_footnote'),
     )
 
 
@@ -540,7 +555,7 @@ def create_outlines(
     tbl: TableSpam,
     workbook: opy.Workbook,
     sheet: str,
-    locations: dict[str, dict[str, int | None]],
+    locations: Locations,
     styles: XlsxStyles,
 ) -> None:
     """Adds vertical and horizontal lines in the table.
@@ -553,37 +568,37 @@ def create_outlines(
         styles (XlsxStyles): Styles that should be applied to the table.
     """
     if tbl.header['lhs'] is not None:
-        left_most = locations['col']['start_col_header_lhs']
+        left_most = locations.get_col('start_col_header_lhs')
     else:
-        left_most = locations['col']['start_col_header_rhs']
+        left_most = locations.get_col('start_col_header_rhs')
 
     # top line
     set_region_style(
         sheet=workbook[sheet],
         style=styles.hline,
-        start_row=locations['row']['start_row_header'],
+        start_row=locations.get_row('start_row_header'),
         start_col=left_most,
-        end_row=locations['row']['start_row_header'],
-        end_col=locations['col']['end_col_header_rhs'],
+        end_row=locations.get_row('start_row_header'),
+        end_col=locations.get_col('end_col_header_rhs'),
     )
 
     # bottom line
     set_region_style(
         sheet=workbook[sheet],
         style=styles.hline,
-        start_row=locations['row']['end_row_data'] + 1,
+        start_row=locations.get_row('end_row_data') + 1,
         start_col=left_most,
-        end_row=locations['row']['end_row_data'] + 1,
-        end_col=locations['col']['end_col_header_rhs'],
+        end_row=locations.get_row('end_row_data') + 1,
+        end_col=locations.get_col('end_col_header_rhs'),
     )
 
     # left line
     set_region_style(
         sheet=workbook[sheet],
         style=styles.vline,
-        start_row=locations['row']['start_row_header'],
+        start_row=locations.get_row('start_row_header'),
         start_col=left_most,
-        end_row=locations['row']['end_row_data'],
+        end_row=locations.get_row('end_row_data'),
         end_col=left_most,
     )
 
@@ -591,18 +606,18 @@ def create_outlines(
     set_region_style(
         sheet=workbook[sheet],
         style=styles.vline,
-        start_row=locations['row']['start_row_header'],
-        start_col=locations['col']['end_col_header_rhs'] + 1,
-        end_row=locations['row']['end_row_data'],
-        end_col=locations['col']['end_col_header_rhs'] + 1,
+        start_row=locations.get_row('start_row_header'),
+        start_col=locations.get_col('end_col_header_rhs') + 1,
+        end_row=locations.get_row('end_row_data'),
+        end_col=locations.get_col('end_col_header_rhs') + 1,
     )
 
     # row name separator
     set_region_style(
         sheet=workbook[sheet],
         style=styles.vline,
-        start_row=locations['row']['start_row_header'],
-        start_col=locations['col']['start_col_header_rhs'],
-        end_row=locations['row']['end_row_data'],
-        end_col=locations['col']['start_col_header_rhs'],
+        start_row=locations.get_row('start_row_header'),
+        start_col=locations.get_col('start_col_header_rhs'),
+        end_row=locations.get_row('end_row_data'),
+        end_col=locations.get_col('start_col_header_rhs'),
     )

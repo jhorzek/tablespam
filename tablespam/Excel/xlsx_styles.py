@@ -1,7 +1,7 @@
 """Styling options for tables exported to excel."""
 
 from __future__ import annotations
-from typing import Callable
+from typing import Callable, cast, Literal, Optional
 from dataclasses import dataclass, field
 import openpyxl as opy
 from openpyxl.worksheet.worksheet import Worksheet
@@ -14,10 +14,10 @@ from copy import copy
 def set_region_style(
     sheet: Worksheet,
     style: Callable[[Cell], None],
-    start_row: int,
-    start_col: int,
-    end_row: int,
-    end_col: int,
+    start_row: int | None,
+    start_col: int | None,
+    end_row: int | None,
+    end_col: int | None,
 ) -> None:
     """Apply a style to a range of cells.
 
@@ -29,8 +29,10 @@ def set_region_style(
         end_row (int): row index at which the style should end
         end_col (int): column index at which the style should end
     """
-    cols = get_column_interval(start_col, end_col)
-    for row in range(start_row, end_row + 1):
+    if any([x is None for x in [start_row, start_col, end_row, end_col]]):
+        raise ValueError('One of the locations is None.')
+    cols = get_column_interval(cast(int, start_col), cast(int, end_col))
+    for row in range(cast(int, start_row), cast(int, end_row) + 1):
         for col in cols:
             cell = col + str(row)
             style(sheet[cell])
@@ -87,14 +89,14 @@ class CellStyle:
     style: Callable[[Cell], None]
 
 
-def default_data_styles() -> dict[DataStyle]:
+def default_data_styles() -> dict[str, DataStyle]:
     """Defines the default styles that are applied to different data types.
 
     Returns:
-        dict[DataStyle]: dict with default styles.
+        dict[str, DataStyle]: dict with default styles.
     """
 
-    def test_double(x: pl.DataFrame):
+    def test_double(x: pl.DataFrame) -> bool:
         if len(x.columns) != 1:
             raise ValueError('Multiple columns passed to test.')
         return all([tp in [pl.Float32, pl.Float64] for tp in x.dtypes])
@@ -107,14 +109,32 @@ def default_data_styles() -> dict[DataStyle]:
     }
 
 
+BorderStyle = Literal[
+    'dashDot',
+    'dashDotDot',
+    'dashed',
+    'dotted',
+    'double',
+    'hair',
+    'medium',
+    'mediumDashDot',
+    'mediumDashDotDot',
+    'mediumDashed',
+    'slantDashDot',
+    'thick',
+    'thin',
+    'none',
+]
+
+
 def set_border(
     c: Cell,
     color: str,
-    left: None | str = None,
-    right: None | str = None,
-    top: None | str = None,
-    bottom: None | str = None,
-):
+    left: Optional[BorderStyle] = None,
+    right: Optional[BorderStyle] = None,
+    top: Optional[BorderStyle] = None,
+    bottom: Optional[BorderStyle] = None,
+) -> None:
     """Adds a border to a cell while retaining existing borders.
 
     Args:
@@ -125,16 +145,141 @@ def set_border(
         top (None | str, optional): style (thin, thick, ...) of the top border. Defaults to None.
         bottom (None | str, optional): style (thin, thick, ...) of the bottom border. Defaults to None.
     """
-    border = copy(c.border)
-    if left is not None:
-        border.left = opy.styles.borders.Side(style=left, color=color)
-    if right is not None:
-        border.right = opy.styles.borders.Side(style=right, color=color)
-    if top is not None:
-        border.top = opy.styles.borders.Side(style=top, color=color)
-    if bottom is not None:
-        border.bottom = opy.styles.borders.Side(style=bottom, color=color)
+    # Define new border
+    border = opy.styles.borders.Border(
+        left=opy.styles.borders.Side(style=left, color=color)
+        if left
+        else c.border.left,
+        right=opy.styles.borders.Side(style=right, color=color)
+        if right
+        else c.border.right,
+        top=opy.styles.borders.Side(style=top, color=color) if top else c.border.top,
+        bottom=opy.styles.borders.Side(style=bottom, color=color)
+        if bottom
+        else c.border.bottom,
+    )
     c.border = border
+
+
+# Helper functions
+def default_bg_style(cell: Cell) -> None:
+    """Default background style.
+
+    Args:
+        cell (Cell): Cell reference to which the style is applied
+    """
+    cell.fill = opy.styles.PatternFill(start_color='FFFFFF', fill_type='solid')
+
+
+def vline_style(cell: Cell) -> None:
+    """Default vertical line style.
+
+    Args:
+        cell (Cell): Cell reference to which the style is applied
+    """
+    set_border(cell, color='FF000000', left='thin')
+
+
+def hline_style(cell: Cell) -> None:
+    """Default horizontal line style.
+
+    Args:
+        cell (Cell): Cell reference to which the style is applied
+    """
+    set_border(cell, color='FF000000', top='thin')
+
+
+def cell_title_style(cell: Cell) -> None:
+    """Default title cell style.
+
+    Args:
+        cell (Cell): Cell reference to which the style is applied
+    """
+    cell.font = opy.styles.Font(size=14, bold=True)
+
+
+def cell_subtitle_style(cell: Cell) -> None:
+    """Default subtitle style.
+
+    Args:
+        cell (Cell): Cell reference to which the style is applied
+    """
+    cell.font = opy.styles.Font(size=11, bold=True)
+
+
+def cell_header_lhs_style(cell: Cell) -> None:
+    """Default style applied to left hand side of the table header.
+
+    Args:
+        cell (Cell): Cell reference to which the style is applied
+    """
+    cell.font = opy.styles.Font(size=11, bold=True)
+    cell.border = opy.styles.borders.Border(
+        left=opy.styles.borders.Side(style='thin', color='FF000000'),
+        bottom=opy.styles.borders.Side(style='thin', color='FF000000'),
+        right=opy.styles.borders.Side(style='thin', color='FF000000'),
+    )
+
+
+def cell_header_rhs_style(cell: Cell) -> None:
+    """Default style applied to right hand side of the table header.
+
+    Args:
+        cell (Cell): Cell reference to which the style is applied
+    """
+    cell.font = opy.styles.Font(size=11, bold=True)
+    cell.border = opy.styles.borders.Border(
+        left=opy.styles.borders.Side(style='thin', color='FF000000'),
+        bottom=opy.styles.borders.Side(style='thin', color='FF000000'),
+        right=opy.styles.borders.Side(style='thin', color='FF000000'),
+    )
+
+
+def cell_rownames_style(cell: Cell) -> None:
+    """Default style applied to rowname cells.
+
+    Args:
+        cell (Cell): Cell reference to which the style is applied
+    """
+    cell.font = opy.styles.Font(size=11)
+
+
+def cell_data_style(cell: Cell) -> None:
+    """Default style applied to data cells.
+
+    Args:
+        cell (Cell): Cell reference to which the style is applied
+    """
+    cell.font = opy.styles.Font(size=11)
+
+
+def cell_footnote_style(cell: Cell) -> None:
+    """Default style applied to footnote cells.
+
+    Args:
+        cell (Cell): Cell reference to which the style is applied
+    """
+    cell.font = opy.styles.Font(size=11)
+    cell.alignment = opy.styles.alignment.Alignment(horizontal='left')
+
+
+def merged_rownames_style(cell: Cell) -> None:
+    """Default style applied to merged row name cells.
+
+    Args:
+        cell (Cell): Cell reference to which the style is applied
+    """
+    cell.alignment = opy.styles.alignment.Alignment(vertical='top')
+
+
+def footnote_style(cell: Cell) -> None:
+    """Default style applied to footnote.
+
+    Args:
+        cell (Cell): Cell reference to which the style is applied
+    """
+    cell.font = opy.styles.Font(size=11, bold=True)
+    cell.alignment = opy.styles.alignment.Alignment(horizontal='left')
 
 
 @dataclass
@@ -171,76 +316,30 @@ class XlsxStyles:
         cell_footnote (Callable[[Cell], None]): style added to footnote cells in the table
     """
 
-    bg_default: Callable[[Cell], None] = lambda c: setattr(
-        c, 'fill', opy.styles.PatternFill(start_color='FFFFFF', fill_type='solid')
-    )
-    bg_title: Callable[[Cell], None] = bg_default
-    bg_subtitle: Callable[[Cell], None] = bg_default
-    bg_header_lhs: Callable[[Cell], None] = bg_default
-    bg_header_rhs: Callable[[Cell], None] = bg_default
-    bg_rownames: Callable[[Cell], None] = bg_default
-    bg_data: Callable[[Cell], None] = bg_default
-    bg_footnote: Callable[[Cell], None] = bg_default
+    bg_default: Callable[[Cell], None] = field(default=default_bg_style)
+    bg_title: Callable[[Cell], None] = field(default=default_bg_style)
+    bg_subtitle: Callable[[Cell], None] = field(default=default_bg_style)
+    bg_header_lhs: Callable[[Cell], None] = field(default=default_bg_style)
+    bg_header_rhs: Callable[[Cell], None] = field(default=default_bg_style)
+    bg_rownames: Callable[[Cell], None] = field(default=default_bg_style)
+    bg_data: Callable[[Cell], None] = field(default=default_bg_style)
+    bg_footnote: Callable[[Cell], None] = field(default=default_bg_style)
 
-    vline: Callable[[Cell], None] = lambda c: set_border(
-        c=c, color='FF000000', left='thin'
-    )
+    vline: Callable[[Cell], None] = field(default=vline_style)
+    hline: Callable[[Cell], None] = field(default=hline_style)
 
-    hline: Callable[[Cell], None] = lambda c: set_border(
-        c=c, color='FF000000', top='thin'
-    )
-
-    cell_title: Callable[[Cell], None] = lambda c: (
-        setattr(c, 'font', opy.styles.Font(size=14, bold=True))
-    )
-    cell_subtitle: Callable[[Cell], None] = lambda c: (
-        setattr(c, 'font', opy.styles.Font(size=11, bold=True))
-    )
-    cell_header_lhs: Callable[[Cell], None] = lambda c: (
-        setattr(c, 'font', opy.styles.Font(size=11, bold=True)),
-        setattr(
-            c,
-            'border',
-            opy.styles.borders.Border(
-                left=opy.styles.borders.Side(style='thin', color='FF000000'),
-                bottom=opy.styles.borders.Side(style='thin', color='FF000000'),
-                right=opy.styles.borders.Side(style='thin', color='FF000000'),
-            ),
-        ),
-    )
-
-    cell_header_rhs: Callable[[Cell], None] = lambda c: (
-        setattr(c, 'font', opy.styles.Font(size=11, bold=True)),
-        setattr(
-            c,
-            'border',
-            opy.styles.borders.Border(
-                left=opy.styles.borders.Side(style='thin', color='FF000000'),
-                bottom=opy.styles.borders.Side(style='thin', color='FF000000'),
-                right=opy.styles.borders.Side(style='thin', color='FF000000'),
-            ),
-        ),
-    )
-
-    cell_rownames: Callable[[Cell], None] = lambda c: setattr(
-        c, 'font', opy.styles.Font(size=11)
-    )
-    cell_data: Callable[[Cell], None] = lambda c: setattr(
-        c, 'font', opy.styles.Font(size=11)
-    )
-    cell_footnote: Callable[[Cell], None] = lambda c: (
-        setattr(c, 'font', opy.styles.Font(size=11)),
-        setattr(c, 'alignment', opy.styles.alignment.Alignment(horizontal='left')),
-    )
+    cell_title: Callable[[Cell], None] = field(default=cell_title_style)
+    cell_subtitle: Callable[[Cell], None] = field(default=cell_subtitle_style)
+    cell_header_lhs: Callable[[Cell], None] = field(default=cell_header_lhs_style)
+    cell_header_rhs: Callable[[Cell], None] = field(default=cell_header_rhs_style)
+    cell_rownames: Callable[[Cell], None] = field(default=cell_rownames_style)
+    cell_data: Callable[[Cell], None] = field(default=cell_data_style)
+    cell_footnote: Callable[[Cell], None] = field(default=cell_footnote_style)
 
     merge_rownames: bool = True
-    merged_rownames_style: Callable[[Cell], None] = lambda c: setattr(
-        c, 'alignment', opy.styles.alignment.Alignment(vertical='top')
-    )
+    merged_rownames_style: Callable[[Cell], None] = field(default=merged_rownames_style)
 
-    footnote_style: Callable[[Cell], None] = lambda c: (
-        setattr(c, 'font', opy.styles.Font(size=11, bold=True)),
-        setattr(c, 'alignment', opy.styles.alignment.Alignment(horizontal='left')),
-    )
-    data_styles: dict[DataStyle] = field(default_factory=default_data_styles)
+    footnote_style: Callable[[Cell], None] = field(default=footnote_style)
+
+    data_styles: dict[str, DataStyle] = field(default_factory=default_data_styles)
     cell_styles: None | list[CellStyle] = None

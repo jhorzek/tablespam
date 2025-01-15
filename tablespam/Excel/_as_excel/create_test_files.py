@@ -1,15 +1,14 @@
-
 from tablespam import TableSpam  # noqa: D100
 from tablespam.Excel.xlsx_styles import CellStyle, XlsxStyles, DataStyle
 import polars as pl
 import openpyxl
 
 
-def create_test_files_cars(target_dir: str):
+def create_test_files_cars(target_dir: str) -> None:
     """Create test excel files for internal tests.
-    
+
     Args:
-        target_dir (str): target directory 
+        target_dir (str): target directory
     """
     cars = pl.DataFrame(
         {
@@ -89,13 +88,14 @@ def create_test_files_cars(target_dir: str):
 
     # Complex merging of rownames
     summarized_table_merge = summarized_table
-    summarized_table_merge = summarized_table_merge.with_columns(pl.lit(1).alias("vs"))
+    summarized_table_merge = summarized_table_merge.with_columns(pl.lit(1).alias('vs'))
     summarized_table_merge = summarized_table_merge.with_columns(
-    pl.when(pl.arange(0, summarized_table_merge.height) == 0)
-      .then(0)
-      .otherwise(pl.col("vs"))
-      .alias("vs"))
-    summarized_table_merge = summarized_table_merge.with_columns(pl.lit(1).alias("N"))
+        pl.when(pl.arange(0, summarized_table_merge.height) == 0)
+        .then(0)
+        .otherwise(pl.col('vs'))
+        .alias('vs')
+    )
+    summarized_table_merge = summarized_table_merge.with_columns(pl.lit(1).alias('N'))
 
     tbl_merge = TableSpam(
         data=summarized_table_merge,
@@ -110,9 +110,7 @@ def create_test_files_cars(target_dir: str):
     tbl_merge.as_excel().save(f'{target_dir}/cars_complex_merge.xlsx')
 
     # offset
-    tbl.as_excel(start_row=3, start_col=5).save(
-        f'{target_dir}/cars_offset.xlsx'
-    )
+    tbl.as_excel(start_row=3, start_col=5).save(f'{target_dir}/cars_offset.xlsx')
 
     # custom cell styles
     (
@@ -127,7 +125,7 @@ def create_test_files_cars(target_dir: str):
                         ),
                     ),
                     CellStyle(
-                        rows=[1,4],
+                        rows=[1, 4],
                         cols=['mean_wt', 'sd_wt'],
                         style=lambda c: setattr(
                             c, 'font', openpyxl.styles.Font(bold=True)
@@ -138,7 +136,7 @@ def create_test_files_cars(target_dir: str):
         ).save(f'{target_dir}/cars_cell_styles.xlsx')
     )
 
-    def test_double(x: pl.DataFrame):
+    def test_double(x: pl.DataFrame) -> bool:
         if len(x.columns) != 1:
             raise ValueError('Multiple columns passed to test.')
         return all([tp in [pl.Float32, pl.Float64] for tp in x.dtypes])
@@ -222,14 +220,16 @@ def create_test_files_cars(target_dir: str):
     ## Test data with missing row names. See https://github.com/jhorzek/tablespan/issues/40
 
     summarized_table_NA = summarized_table.with_columns(
-    pl.when(pl.arange(0, summarized_table.height) == 0)
-      .then(None)
-      .otherwise(pl.col("cyl"))
-      .alias("cyl")).with_columns(
-    pl.when(pl.arange(0, summarized_table.height) == 1)
-      .then(None)
-      .otherwise(pl.col("vs"))
-      .alias("vs"))
+        pl.when(pl.arange(0, summarized_table.height) == 0)
+        .then(None)
+        .otherwise(pl.col('cyl'))
+        .alias('cyl')
+    ).with_columns(
+        pl.when(pl.arange(0, summarized_table.height) == 1)
+        .then(None)
+        .otherwise(pl.col('vs'))
+        .alias('vs')
+    )
 
     tbl = TableSpam(
         data=summarized_table_NA,

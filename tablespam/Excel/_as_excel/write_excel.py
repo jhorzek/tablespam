@@ -16,7 +16,7 @@ def write_excel_col(
     col_start: int,
     base_style: Callable[[Cell], None],
     data_styles: dict[str, DataStyle],
-):
+) -> None:
     """Writes a single data column to the Excel workbook.
 
     Args:

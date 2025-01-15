@@ -4,14 +4,17 @@ from tablespam.Formulas import Formula
 from tablespam.as_string import tbl_as_string
 import polars as pl
 import great_tables as gt
-from tablespam.as_gt import (
+import openpyxl as opy
+from tablespam.GT._as_gt.as_gt import (
     add_gt_spanners,
     add_gt_rowname_separator,
     add_gt_titles,
     add_gt_footnote,
     FormattingFunction,
-    default_formatting,
 )
+from tablespam.GT.formatting import default_formatting
+from tablespam.Excel.xlsx_styles import XlsxStyles
+from tablespam.Excel._as_excel.as_excel import tbl_as_excel
 
 
 class TableSpam:
@@ -666,6 +669,131 @@ class TableSpam:
             gt_tbl = default_formatting(gt_tbl)
 
         return gt_tbl
+
+    def as_excel(
+        self,
+        workbook: opy.Workbook | None = None,
+        sheet: str = 'Table',
+        start_row: int = 1,
+        start_col: int = 1,
+        styles: XlsxStyles | None = None,
+    ) -> opy.Workbook:
+        """Export a TableSpam table to Excel.
+
+        Tablespam uses openpyxl to export tables to Excel workbooks. See
+        https://openpyxl.readthedocs.io/en/stable/ for more details on openpyxl.
+
+        Args:
+            workbook (opy.Workbook | None, optional): An openpyxl workbook to which the table should be added.
+                When set to None, a new workbook will be created. Defaults to None.
+            sheet (str, optional): The name of the sheet to which the table should be written. Defaults to 'Table'.
+            start_row (int, optional): Index of the row where the table starts in the sheet. Defaults to 1.
+            start_col (int, optional): Index of the column where the table starts in the sheet. Defaults to 1.
+            styles (XlsxStyles | None, optional): Custom styles that are applied to the table. Defaults to None.
+
+        Returns:
+            opy.Workbook: openpyxl workbook
+
+
+        Example:
+        ```python
+        from tablespam import TableSpam
+        import polars as pl
+
+        cars = pl.DataFrame(
+            {
+                'mpg': [21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2],
+                'cyl': [6, 6, 4, 6, 8, 6, 8, 4, 4, 6],
+                'disp': [
+                    160.0,
+                    160.0,
+                    108.0,
+                    258.0,
+                    360.0,
+                    225.0,
+                    360.0,
+                    146.7,
+                    140.8,
+                    167.6,
+                ],
+                'hp': [110, 110, 93, 110, 175, 105, 245, 62, 95, 123],
+                'drat': [3.90, 3.90, 3.85, 3.08, 3.15, 2.76, 3.21, 4.08, 3.92, 3.92],
+                'wt': [
+                    2.620,
+                    2.875,
+                    2.320,
+                    3.215,
+                    3.440,
+                    3.460,
+                    3.570,
+                    3.190,
+                    3.150,
+                    3.440,
+                ],
+                'qsec': [
+                    16.46,
+                    17.02,
+                    18.61,
+                    19.44,
+                    17.02,
+                    20.22,
+                    15.84,
+                    20.00,
+                    22.90,
+                    18.30,
+                ],
+                'vs': [0, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+                'am': [1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+                'gear': [4, 4, 4, 3, 3, 3, 3, 4, 4, 4],
+                'carb': [4, 4, 1, 1, 2, 1, 4, 2, 2, 4],
+            }
+        )
+
+        summarized_table = cars.group_by(['cyl', 'vs']).agg(
+            [
+                pl.len().alias('N'),
+                pl.col('hp').mean().alias('mean_hp'),
+                pl.col('hp').std().alias('sd_hp'),
+                pl.col('wt').mean().alias('mean_wt'),
+                pl.col('wt').std().alias('sd_wt'),
+            ]
+        )
+
+        tbl = TableSpam(
+            data=summarized_table,
+            formula='''Cylinder:cyl + Engine:vs ~
+                        N +
+                        (`Horse Power` = Mean:mean_hp + SD:sd_hp) +
+                        (`Weight` = Mean:mean_wt + SD:sd_wt)''',
+            title='Motor Trend Car Road Tests',
+            subtitle='A table created with tablespam',
+            footnote='Data from the infamous mtcars data set.',
+        )
+
+        wb = tbl.as_excel()  # Export to Excel workbook
+        # wb.save("tablespam_table.xlsx") # Write to an Excel file.
+        ```
+        """
+        if workbook is None:
+            workbook = opy.Workbook()
+            # openpyxl automatically adds a default sheet
+            # that we will remove
+            if 'Sheet' in workbook.sheetnames:
+                workbook.remove(workbook['Sheet'])
+        if styles is None:
+            styles = XlsxStyles()
+        if sheet not in workbook.sheetnames:
+            workbook.create_sheet(title=sheet)
+
+        wb = tbl_as_excel(
+            tbl=self,
+            workbook=workbook,
+            sheet=sheet,
+            start_row=start_row,
+            start_col=start_col,
+            styles=styles,
+        )
+        return wb
 
 
 def select_data(data: pl.DataFrame, variables: list[str]) -> pl.DataFrame | None:

@@ -1,4 +1,4 @@
-from .TableSpam import TableSpam  # noqa: D104
+from tablespam.TableSpam import TableSpam  # noqa: D104
 
 """Create satisficing tables with tablespam.
 

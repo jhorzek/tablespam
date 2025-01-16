@@ -25,11 +25,11 @@ creating tables in python. `tablespam` is a port of the R package
 which allows tables created with `tablespam` to be exported to the
 following formats:
 
+- **Excel** (using
+  [`openpyxl`](https://openpyxl.readthedocs.io/en/stable/))
 - **HTML** (using [`gt`](https://gt.rstudio.com/))
 - **LaTeX** (using [`gt`](https://gt.rstudio.com/))
 - **RTF** (using [`gt`](https://gt.rstudio.com/))
-
-An export to Excel is still work in progress.
 
 ## Installation
 
@@ -67,7 +67,8 @@ cars = pl.DataFrame(
     }
 )
 
-summarized_table = cars.group_by(['cyl', 'vs']).agg(
+summarized_table = cars.group_by(['cyl', 'vs'], 
+                                  maintain_order=True).agg(
     [
         pl.len().alias('N'),
         pl.col('hp').mean().alias('mean_hp'),
@@ -86,9 +87,9 @@ print(summarized_table)
     │ --- ┆ --- ┆ --- ┆ ---        ┆ ---       ┆ ---      ┆ ---      │
     │ i64 ┆ i64 ┆ u32 ┆ f64        ┆ f64       ┆ f64      ┆ f64      │
     ╞═════╪═════╪═════╪════════════╪═══════════╪══════════╪══════════╡
-    │ 6   ┆ 1   ┆ 3   ┆ 112.666667 ┆ 9.291573  ┆ 3.371667 ┆ 0.136045 │
     │ 6   ┆ 0   ┆ 2   ┆ 110.0      ┆ 0.0       ┆ 2.7475   ┆ 0.180312 │
     │ 4   ┆ 1   ┆ 3   ┆ 83.333333  ┆ 18.502252 ┆ 2.886667 ┆ 0.491155 │
+    │ 6   ┆ 1   ┆ 3   ┆ 112.666667 ┆ 9.291573  ┆ 3.371667 ┆ 0.136045 │
     │ 8   ┆ 0   ┆ 2   ┆ 210.0      ┆ 49.497475 ┆ 3.505    ┆ 0.091924 │
     └─────┴─────┴─────┴────────────┴───────────┴──────────┴──────────┘
 
@@ -121,9 +122,9 @@ print(tbl.as_string())
 
     | cyl | mean_hp sd_hp |
     | --- - ------- ----- |
-    | 6   | 112.67  9.29  |
     | 6   | 110.0   0.0   |
     | 4   | 83.33   18.5  |
+    | 6   | 112.67  9.29  |
     | ... | ...     ...   |
 
 Note that the row names (`cyl`) are in a separate block to the left.
@@ -144,9 +145,9 @@ print(tbl.as_string())
     |     | Horsepower       |
     | cyl | mean_hp    sd_hp |
     | --- - ---------- ----- |
-    | 6   | 112.67     9.29  |
     | 6   | 110.0      0.0   |
     | 4   | 83.33      18.5  |
+    | 6   | 112.67     9.29  |
     | ... | ...        ...   |
 
 Spanners can also be nested:
@@ -162,9 +163,9 @@ print(tbl.as_string())
     |     | Mean       SD    |
     | cyl | mean_hp    sd_hp |
     | --- - ---------- ----- |
-    | 6   | 112.67     9.29  |
     | 6   | 110.0      0.0   |
     | 4   | 83.33      18.5  |
+    | 6   | 112.67     9.29  |
     | ... | ...        ...   |
 
 ### Renaming Columns
@@ -187,9 +188,9 @@ print(tbl.as_string())
     |     | Horsepower      |
     | cyl | Mean       SD   |
     | --- - ---------- ---- |
-    | 6   | 112.67     9.29 |
     | 6   | 110.0      0.0  |
     | 4   | 83.33      18.5 |
+    | 6   | 112.67     9.29 |
     | ... | ...        ...  |
 
 ### Creating the Full Table
@@ -215,15 +216,127 @@ print(tbl.as_string())
     |                 |     Horse Power      Weight      |
     | Cylinder Engine | N   Mean        SD   Mean   SD   |
     | -------- ------ - --- ----------- ---- ------ ---- |
-    | 6        1      | 3   112.67      9.29 3.37   0.14 |
     | 6        0      | 2   110.0       0.0  2.75   0.18 |
     | 4        1      | 3   83.33       18.5 2.89   0.49 |
+    | 6        1      | 3   112.67      9.29 3.37   0.14 |
     | ...      ...    | ... ...         ...  ...    ...  |
     Data from the infamous mtcars data set.
 
 ## Exporting to Excel
 
-Exporting to Excel is still work in progress.
+> Note: The screenshots below are from the R-package tablespan and may
+> deviate slightly from the actual output. The screenshots will be
+> updated soon.
+
+Tables created with `tablespam` can be exported to `openpyxl` workbooks,
+which allows saving as .xlsx files.
+
+``` python
+# Translate to openpyxl:
+tbl_xlsx = tbl.as_excel()
+
+# save the table:
+# tbl_xlsx.save("my_table.xlsx")
+```
+
+![](assets/tablespan_example_cars.png)
+
+### Styling
+
+While `tablespam` provides limited styling options, some elements can be
+adjusted. For example, we may want to print some elements in bold or
+format numbers differently. In `tablespam`, styling happens when
+translating the table to an `openpyxl` workbook with `as_excel`.
+
+#### Formatting Cells
+
+Let’s assume we want all `mean_hp` values with a value $\geq 100$ to be
+printed in bold. To this end, we first create a function that takes in a
+single openpyxl cell and applies a style to it:
+
+``` python
+import openpyxl
+def bold(c):
+    c.font = openpyxl.styles.Font(bold=True)
+```
+
+Next, we have to define a CellStyle for the column `mean_hp`, where we
+pass in the index of the rows that should be bold.
+
+> Note: openpyxl uses 1-based indexing!
+
+``` python
+# get the indices:
+geq_100 = (summarized_table.with_row_index(name="index") 
+            .filter(pl.col("mean_hp") >= 100) 
+            .select("index") 
+            .to_series() 
+            .to_list())
+# translate to 1-based index:
+geq_100 = [i + 1 for i in geq_100]
+```
+
+Define cell styles:
+
+``` python
+from tablespam.Excel.xlsx_styles import XlsxStyles, CellStyle
+styles=XlsxStyles(
+            cell_styles=[
+                CellStyle(
+                    rows=geq_100,
+                    cols=['mean_hp'],
+                    style=bold,
+                ),
+            ]
+        )
+```
+
+Finally, we pass this style to `as_excel`:
+
+``` python
+tbl_xlsx = tbl.as_excel(styles=styles)
+
+# save the table:
+# tbl_xlsx.save("my_table.xlsx")
+```
+
+![](assets/tablespan_example_cars_styled.png)
+
+#### Formatting Data Types
+
+`tablespan` also allows formatting specific data types. Let’s assume
+that we want to round all doubles to 3 instead of the default 2 digits.
+To this end, we use `DataStyle`s, where we specify (1) a function that
+checks for the data type we want to style (here for doubles) and (2) a
+style for all columns that match that style:
+
+``` python
+from tablespam.Excel.xlsx_styles import DataStyle
+# Define test: The function will be passed a polars data frame and should
+# check for the data types defined here: 
+# https://docs.pola.rs/api/python/stable/reference/datatypes.html
+def is_double(x: pl.DataFrame) -> bool:
+    return all([tp in [pl.Float32, pl.Float64] for tp in x.dtypes])
+
+# Function that applies our style to a single cell:
+def three_digits(c):
+    c.number_format = "0.000"
+
+# Now we define the data_style. The data_style must be a 
+# dict.
+data_style = {
+    "double": DataStyle(test = is_double,
+                         style = three_digits) 
+} 
+tbl_xlsx = tbl.as_excel(
+        styles=XlsxStyles(
+            data_styles=data_style
+        )
+    )
+# tbl_xlsx.save("my_table.xlsx")
+```
+
+![](assets/tablespan_example_cars_styled_data.png)
 
 ## Exporting to HTML, LaTeX, and RTF
 
@@ -278,7 +391,7 @@ above `Horse Power` and `Weight`:
     AssertionError: 
     [0;31m---------------------------------------------------------------------------[0m
     [0;31mAssertionError[0m                            Traceback (most recent call last)
-    Cell [0;32mIn[17], line 2[0m
+    Cell [0;32mIn[89], line 2[0m
     [1;32m      1[0m ([43mgt_tbl[49m
     [0;32m----> 2[0m [43m  [49m[38;5;241;43m.[39;49m[43mtab_spanner[49m[43m([49m[43mlabel[49m[43m [49m[38;5;241;43m=[39;49m[43m [49m[38;5;124;43m"[39;49m[38;5;124;43mNew Spanner[39;49m[38;5;124;43m"[39;49m[43m,[49m[43m [49m
     [1;32m      3[0m [43m               [49m[43mspanners[49m[43m [49m[38;5;241;43m=[39;49m[43m [49m[43m[[49m[38;5;124;43m"[39;49m[38;5;124;43mHorse Power[39;49m[38;5;124;43m"[39;49m[43m,[49m[43m [49m[38;5;124;43m"[39;49m[38;5;124;43mWeight[39;49m[38;5;124;43m"[39;49m[43m][49m[43m)[49m)
@@ -331,9 +444,9 @@ print(tbl.as_string())
     | Horsepower      |
     | Mean       SD   |
     | ---------- ---- |
-    | 112.67     9.29 |
     | 110.0      0.0  |
     | 83.33      18.5 |
+    | 112.67     9.29 |
     | ...        ...  |
 
 ## References

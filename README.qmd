@@ -23,11 +23,10 @@ The objective of `tablespam` is to provide a "good enough" approach to creating 
 `tablespam` currently builds on the awesome package [`great_tables`](https://posit-dev.github.io/great-tables/articles/intro.html), which allows tables created with `tablespam`
 to be exported to the following formats:
 
+- **Excel** (using [`openpyxl`](https://openpyxl.readthedocs.io/en/stable/))
 - **HTML** (using [`gt`](https://gt.rstudio.com/))
 - **LaTeX** (using [`gt`](https://gt.rstudio.com/))
 - **RTF** (using [`gt`](https://gt.rstudio.com/))
-
-An export to Excel is still work in progress.
 
 ## Installation
 
@@ -65,7 +64,8 @@ cars = pl.DataFrame(
     }
 )
 
-summarized_table = cars.group_by(['cyl', 'vs']).agg(
+summarized_table = cars.group_by(['cyl', 'vs'], 
+                                  maintain_order=True).agg(
     [
         pl.len().alias('N'),
         pl.col('hp').mean().alias('mean_hp'),
@@ -162,7 +162,112 @@ print(tbl.as_string())
 
 ## Exporting to Excel
 
-Exporting to Excel is still work in progress.
+> Note: The screenshots below are from the R-package tablespan and may
+deviate slightly from the actual output. The screenshots will be updated soon.
+
+Tables created with `tablespam` can be exported to `openpyxl` workbooks, which allows saving as .xlsx files.
+
+```{python}
+# Translate to openpyxl:
+tbl_xlsx = tbl.as_excel()
+
+# save the table:
+# tbl_xlsx.save("my_table.xlsx")
+```
+
+![](assets/tablespan_example_cars.png)
+
+### Styling
+
+While `tablespam` provides limited styling options, some elements can be adjusted.
+For example, we may want to print some elements in bold or format numbers differently.
+In `tablespam`, styling happens when translating the table to an `openpyxl` workbook
+with `as_excel`.
+
+#### Formatting Cells
+
+Let's assume we want all `mean_hp` values with a value $\geq 100$ to be printed 
+in bold. To this end, we first create a function that takes in a single openpyxl cell and applies a style to it:
+
+```{python}
+import openpyxl
+def bold(c):
+    c.font = openpyxl.styles.Font(bold=True)
+```
+
+Next, we have to define a CellStyle for the column `mean_hp`, where we pass in the index of the rows
+that should be bold.
+
+> Note: openpyxl uses 1-based indexing!
+```{python}
+# get the indices:
+geq_100 = (summarized_table.with_row_index(name="index") 
+            .filter(pl.col("mean_hp") >= 100) 
+            .select("index") 
+            .to_series() 
+            .to_list())
+# translate to 1-based index:
+geq_100 = [i + 1 for i in geq_100]
+```
+Define cell styles:
+```{python}
+from tablespam.Excel.xlsx_styles import XlsxStyles, CellStyle
+styles=XlsxStyles(
+            cell_styles=[
+                CellStyle(
+                    rows=geq_100,
+                    cols=['mean_hp'],
+                    style=bold,
+                ),
+            ]
+        )
+```
+
+Finally, we pass this style to `as_excel`:
+
+```{python}
+tbl_xlsx = tbl.as_excel(styles=styles)
+
+# save the table:
+# tbl_xlsx.save("my_table.xlsx")
+```
+
+![](assets/tablespan_example_cars_styled.png)
+
+#### Formatting Data Types
+
+`tablespan` also allows formatting specific data types. Let's assume that we want
+to round all doubles to 3 instead of the default 2 digits.
+To this end, we use `DataStyle`s, where we specify (1) a 
+function that checks for the data type we want to style (here for doubles) and
+(2) a style for all columns that match that style:
+```{python}
+from tablespam.Excel.xlsx_styles import DataStyle
+# Define test: The function will be passed a polars data frame and should
+# check for the data types defined here: 
+# https://docs.pola.rs/api/python/stable/reference/datatypes.html
+def is_double(x: pl.DataFrame) -> bool:
+    return all([tp in [pl.Float32, pl.Float64] for tp in x.dtypes])
+
+# Function that applies our style to a single cell:
+def three_digits(c):
+    c.number_format = "0.000"
+
+# Now we define the data_style. The data_style must be a 
+# dict.
+data_style = {
+    "double": DataStyle(test = is_double,
+                         style = three_digits) 
+} 
+tbl_xlsx = tbl.as_excel(
+        styles=XlsxStyles(
+            data_styles=data_style
+        )
+    )
+# tbl_xlsx.save("my_table.xlsx")
+```
+
+![](assets/tablespan_example_cars_styled_data.png)
 
 ## Exporting to HTML, LaTeX, and RTF
 

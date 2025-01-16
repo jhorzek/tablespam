@@ -1,47 +1,97 @@
-from tablespam import TableSpam
-from tablespam.Excel.xlsx_styles import XlsxStyles
-import polars as pl
+from tablespam.Excel._as_excel.create_test_files import create_test_files_cars
+import openpyxl
 
-cars = pl.DataFrame(
-    {
-        'mpg': [21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2],
-        'cyl': [6, 6, 4, 6, 8, 6, 8, 4, 4, 6],
-        'disp': [160.0, 160.0, 108.0, 258.0, 360.0, 225.0, 360.0, 146.7, 140.8, 167.6],
-        'hp': [110, 110, 93, 110, 175, 105, 245, 62, 95, 123],
-        'drat': [3.90, 3.90, 3.85, 3.08, 3.15, 2.76, 3.21, 4.08, 3.92, 3.92],
-        'wt': [2.620, 2.875, 2.320, 3.215, 3.440, 3.460, 3.570, 3.190, 3.150, 3.440],
-        'qsec': [16.46, 17.02, 18.61, 19.44, 17.02, 20.22, 15.84, 20.00, 22.90, 18.30],
-        'vs': [0, 0, 1, 1, 0, 1, 0, 1, 1, 1],
-        'am': [1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-        'gear': [4, 4, 4, 3, 3, 3, 3, 4, 4, 4],
-        'carb': [4, 4, 1, 1, 2, 1, 4, 2, 2, 4],
-    }
-)
 
-summarized_table = (
-    cars.group_by(['cyl', 'vs'])
-    .agg(
-        [
-            pl.len().alias('N'),
-            pl.col('hp').mean().alias('mean_hp'),
-            pl.col('hp').std().alias('sd_hp'),
-            pl.col('wt').mean().alias('mean_wt'),
-            pl.col('wt').std().alias('sd_wt'),
-        ]
-    )
-    .sort(pl.col('cyl'))
-)
+def test_excel(tmp_path):
+    test_xlsx = create_test_files_cars()
 
-tbl = TableSpam(
-    data=summarized_table,
-    formula="""Cylinder:cyl + Engine:vs ~
-                    N +
-                    (`Horse Power` = Mean:mean_hp + SD:sd_hp) +
-                    (`Weight` = Mean:mean_wt + SD:sd_wt)""",
-    title='Motor Trend Car Road Tests',
-    subtitle='A table created with tablespan',
-    footnote='Data from the infamous mtcars data set.',
-).as_excel(styles=XlsxStyles(merge_rownames=True))
+    # The created xlsx files correspond to the excel files in data.
+    # We load those files and compare our results in test_xlsx to them
+    for tst in test_xlsx:
+        # because openpyxl may not read the workbook the same it was written, we
+        # will first first save our new workbook and then read it again.
+        test_xlsx[tst].save(f'{tmp_path}/tmp_file.xlsx')
+        to_test = openpyxl.load_workbook(filename=f'{tmp_path}/tmp_file.xlsx')
+        # load excel file from data
+        target = openpyxl.load_workbook(filename=f'tests/data/{tst}.xlsx')
+        # Get sheet dimensions
+        rows = range(target['Table'].min_row, target['Table'].max_row + 1)
+        cols = range(target['Table'].min_column, target['Table'].max_column + 1)
+        identical = True
+        for row in rows:
+            for col in cols:
+                if not identical:
+                    raise ValueError('Mismatch between test files and excel workbooks.')
+                cell_address = f'{openpyxl.utils.get_column_interval(col, col)[0]}{row}'
+                # compare values
+                if target['Table'][cell_address].value is None:
+                    if to_test['Table'][cell_address].value is None:
+                        next
+                    else:
+                        identical = False
+                        if not identical:
+                            raise ValueError(
+                                'Mismatch between test files and excel workbooks.'
+                            )
+                        next
+                identical = identical & (
+                    target['Table'][cell_address].value
+                    == to_test['Table'][cell_address].value
+                )
+                if not identical:
+                    raise ValueError('Mismatch between test files and excel workbooks.')
+                # compare styles
+                identical = identical & (
+                    target['Table'][cell_address].style
+                    == to_test['Table'][cell_address].style
+                )
+                if not identical:
+                    raise ValueError('Mismatch between test files and excel workbooks.')
+                # borders
+                identical = identical & (
+                    (
+                        target['Table'][cell_address].border.left,
+                        target['Table'][cell_address].border.right,
+                        target['Table'][cell_address].border.top,
+                        target['Table'][cell_address].border.bottom,
+                    )
+                    == (
+                        to_test['Table'][cell_address].border.left,
+                        to_test['Table'][cell_address].border.right,
+                        to_test['Table'][cell_address].border.top,
+                        to_test['Table'][cell_address].border.bottom,
+                    )
+                )
+                if not identical:
+                    raise ValueError('Mismatch between test files and excel workbooks.')
 
-tbl.save('test.xlsx')
-print(1)
+                identical = identical & (
+                    (
+                        target['Table'][cell_address].border.left,
+                        target['Table'][cell_address].border.right,
+                        target['Table'][cell_address].border.top,
+                        target['Table'][cell_address].border.bottom,
+                    )
+                    == (
+                        to_test['Table'][cell_address].border.left,
+                        to_test['Table'][cell_address].border.right,
+                        to_test['Table'][cell_address].border.top,
+                        to_test['Table'][cell_address].border.bottom,
+                    )
+                )
+
+                if not identical:
+                    raise ValueError('Mismatch between test files and excel workbooks.')
+
+                identical = identical & (
+                    (
+                        target['Table'][cell_address].font.bold,
+                        target['Table'][cell_address].font.size,
+                    )
+                    == (
+                        to_test['Table'][cell_address].font.bold,
+                        to_test['Table'][cell_address].font.size,
+                    )
+                )
+                if not identical:
+                    raise ValueError('Mismatch between test files and excel workbooks.')

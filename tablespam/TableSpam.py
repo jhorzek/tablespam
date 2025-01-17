@@ -1,7 +1,7 @@
 """TableSpam provides a formla-based syntax to define good-enough tables."""
 
-from tablespam.Formulas import Formula
-from tablespam.as_string import tbl_as_string
+from tablespam._Formula.Formulas import Formula
+from tablespam._as_string.as_string import tbl_as_string
 import polars as pl
 import great_tables as gt
 import openpyxl as opy

@@ -14,7 +14,7 @@ import numpy as np
 
 if TYPE_CHECKING:
     from tablespam.TableSpam import TableSpam
-    from tablespam.Entry import HeaderEntry
+    from tablespam._Formula.Entry import HeaderEntry
 
 
 def tbl_as_excel(

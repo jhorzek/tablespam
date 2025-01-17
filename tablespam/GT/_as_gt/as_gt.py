@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, cast, Protocol, Any
 
 if TYPE_CHECKING:
     from tablespam.TableSpam import TableSpam
-    from tablespam.Entry import HeaderEntry
+    from tablespam._Formula.Entry import HeaderEntry
 
 import great_tables as gt
 import polars as pl

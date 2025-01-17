@@ -1,6 +1,6 @@
 """Formulas are a rudimentary and limited implementation of an R-style formula syntax for TableSpam."""
 
-from tablespam.Entry import HeaderEntry
+from tablespam._Formula.Entry import HeaderEntry
 import pyparsing as pyp
 from typing import Union
 

@@ -474,7 +474,7 @@ def style_color(primary_color: str = 'ffffff') -> XlsxStyles:
     return styles
 
 
-def get_text_color(primary_color: str):
+def get_text_color(primary_color: str) -> str:
     """Get text color based on background color.
 
     Determines if the text should be black or white based on the formula
@@ -490,7 +490,7 @@ def get_text_color(primary_color: str):
         ValueError: Error in case the color code is not for a hex
 
     Returns:
-        _type_: hex color code for text
+        str: hex color code for text
     """
     # Determines if the text should be black or white based on the formula
     # from Mark Ransom and SudoPlz at

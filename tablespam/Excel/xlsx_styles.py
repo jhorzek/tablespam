@@ -8,6 +8,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.utils import get_column_interval
 from openpyxl.cell.cell import Cell
 import polars as pl
+from functools import partial
 
 
 def set_region_style(
@@ -342,3 +343,182 @@ class XlsxStyles:
 
     data_styles: dict[str, DataStyle] = field(default_factory=default_data_styles)
     cell_styles: None | list[CellStyle] = None
+
+
+def style_color(primary_color: str = 'ffffff') -> XlsxStyles:
+    """Provides a simple way to define a color scheme for tables.
+
+    By default, tables have a "light" theme, where the background is white and text / lines are black.
+    Based on a primary color, style_color will create tables that use the primary
+    color as background for all title, header, and row name cells and adapts the
+    text color based on the primary color. The automatic adaption of the
+    background color is implemented based on Mark Ransom and SudoPlz at
+    <https://stackoverflow.com/questions/3942878/how-to-decide-font-color-in-white-or-black-depending-on-background-color>
+
+
+    Args:
+        primary_color (str, optional): olor to be used for the title, header, and row names
+            background. This must be a hex code for the color. Defaults to 'ffffff'.
+
+    Returns:
+        XlsxStyles: Style object
+    """
+    # We only need the hex code; remove #
+    primary_color = primary_color.lstrip('#')
+    text_color = get_text_color(primary_color=primary_color)
+
+    if text_color == '000000':
+        line_color = '000000'
+    else:
+        line_color = primary_color
+
+    def bg_fun(cell: Cell, color: str) -> None:
+        """Default background style.
+
+        Args:
+            cell (Cell): Cell reference to which the style is applied
+            color (str): Color applied to cell
+        """
+        cell.fill = opy.styles.PatternFill(start_color=color, fill_type='solid')
+
+    def vline_color(cell: Cell, color: str) -> None:
+        """Default vertical line style.
+
+        Args:
+            cell (Cell): Cell reference to which the style is applied
+            color (str): Color applied to line
+        """
+        set_border(cell, color=color, left='thin')
+
+    def hline_color(cell: Cell, color: str) -> None:
+        """Default horizontal line style.
+
+        Args:
+            cell (Cell): Cell reference to which the style is applied
+            color (str): Color applied to line
+        """
+        set_border(cell, color=color, top='thin')
+
+    def cell_title_style(cell: Cell, color: str) -> None:
+        """Default title cell style.
+
+        Args:
+            cell (Cell): Cell reference to which the style is applied
+            color (str): Color applied to cell
+        """
+        cell.font = opy.styles.Font(size=14, bold=True, color=color)
+
+    def cell_subtitle_style(cell: Cell, color: str) -> None:
+        """Default subtitle style.
+
+        Args:
+            cell (Cell): Cell reference to which the style is applied
+            color (str): Color applied to cell
+        """
+        cell.font = opy.styles.Font(size=11, bold=True, color=color)
+
+    def cell_header_lhs_style(cell: Cell, color: str) -> None:
+        """Default style applied to left hand side of the table header.
+
+        Args:
+            cell (Cell): Cell reference to which the style is applied
+            color (str): Color applied to cell
+        """
+        cell.font = opy.styles.Font(size=11, bold=True, color=color)
+        cell.border = opy.styles.borders.Border(
+            left=opy.styles.borders.Side(style='thin', color=color),
+            bottom=opy.styles.borders.Side(style='thin', color=color),
+            right=opy.styles.borders.Side(style='thin', color=color),
+        )
+
+    def cell_header_rhs_style(cell: Cell, color: str) -> None:
+        """Default style applied to right hand side of the table header.
+
+        Args:
+            cell (Cell): Cell reference to which the style is applied
+            color (str): Color applied to cell
+        """
+        cell.font = opy.styles.Font(size=11, bold=True, color=color)
+        cell.border = opy.styles.borders.Border(
+            left=opy.styles.borders.Side(style='thin', color=color),
+            bottom=opy.styles.borders.Side(style='thin', color=color),
+            right=opy.styles.borders.Side(style='thin', color=color),
+        )
+
+    def cell_rownames_style(cell: Cell, color: str) -> None:
+        """Default style applied to rowname cells.
+
+        Args:
+            cell (Cell): Cell reference to which the style is applied
+            color (str): Color applied to cell
+        """
+        cell.font = opy.styles.Font(size=11, color=color)
+
+    styles = XlsxStyles(
+        bg_default=partial(bg_fun, color='ffffff'),
+        bg_title=partial(bg_fun, color=primary_color),
+        bg_subtitle=partial(bg_fun, color=primary_color),
+        bg_header_lhs=partial(bg_fun, color=primary_color),
+        bg_header_rhs=partial(bg_fun, color=primary_color),
+        bg_rownames=partial(bg_fun, color=primary_color),
+        bg_data=partial(bg_fun, color='ffffff'),
+        bg_footnote=partial(bg_fun, color='ffffff'),
+        vline=partial(vline_color, color=line_color),
+        hline=partial(hline_color, color=line_color),
+        cell_title=partial(cell_title_style, color=text_color),
+        cell_subtitle=partial(cell_subtitle_style, color=text_color),
+        cell_header_lhs=partial(cell_header_lhs_style, color=text_color),
+        cell_header_rhs=partial(cell_header_rhs_style, color=text_color),
+        cell_rownames=partial(cell_rownames_style, color=text_color),
+    )
+    return styles
+
+
+def get_text_color(primary_color: str) -> str:
+    """Get text color based on background color.
+
+    Determines if the text should be black or white based on the formula
+    from Mark Ransom and SudoPlz at
+    <https://stackoverflow.com/questions/3942878/how-to-decide-font-color-in-white-or-black-depending-on-background-color>
+
+
+
+    Args:
+        primary_color (str): color to be used for the title, header, and row names background.
+
+    Raises:
+        ValueError: Error in case the color code is not for a hex
+
+    Returns:
+        str: hex color code for text
+    """
+    # Determines if the text should be black or white based on the formula
+    # from Mark Ransom and SudoPlz at
+    # <https://stackoverflow.com/questions/3942878/how-to-decide-font-color-in-white-or-black-depending-on-background-color>
+
+    # We only need the hex code; remove #
+    primary_color = primary_color.lstrip('#')
+    if len(primary_color) != 6:
+        raise ValueError(
+            'Expected primary_color to be of length 6. Got {primary_color} (length {len(primary_color)}).'
+        )
+    # split in rgb and divide by max (255)
+    r = int(primary_color[0:3], 16) / 255
+    g = int(primary_color[2:4], 16) / 255
+    b = int(primary_color[4:6], 16) / 255
+
+    def convert_color(x: float) -> float:
+        if x <= 0.03928:
+            return x / 12.92
+        else:
+            return pow((x + 0.055) / 1.055, 2.4)
+
+    luminance = (
+        (0.2126 * convert_color(r))
+        + (0.7152 * convert_color(g))
+        + (0.0722 * convert_color(b))
+    )
+
+    if luminance <= 0.1769:
+        return 'ffffff'
+    return '000000'

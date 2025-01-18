@@ -248,6 +248,34 @@ adjusted. For example, we may want to print some elements in bold or
 format numbers differently. In `tablespam`, styling happens when
 translating the table to an `openpyxl` workbook with `as_excel`.
 
+#### Changing the Overall Look
+
+The easiest way to customize tables is to change the default color
+scheme. The class `XlsxStyles` provides control over most elements in
+the table, but in many cases `style_color` may be sufficient. The
+following creates a table with teal-colored backgrounds for the title,
+header, and row names:
+
+``` python
+from tablespam.Excel.xlsx_styles import style_color
+
+tbl_xlsx = tbl.as_excel(styles = style_color(primary_color = "008080"))
+
+# save the table:
+# tbl_xlsx.save("my_table.xlsx")
+```
+
+![](assets/tablespan_example_cars_color.png)
+
+Similarly, a dark background can be defined as follows:
+
+``` python
+tbl_xlsx = tbl.as_excel(styles = style_color(primary_color = "000000"))
+
+# save the table:
+# tbl_xlsx.save("my_table.xlsx")
+```
+
 #### Formatting Cells
 
 Let’s assume we want all `mean_hp` values with a value $\geq 100$ to be
@@ -391,7 +419,7 @@ above `Horse Power` and `Weight`:
     AssertionError: 
     [0;31m---------------------------------------------------------------------------[0m
     [0;31mAssertionError[0m                            Traceback (most recent call last)
-    Cell [0;32mIn[89], line 2[0m
+    Cell [0;32mIn[16], line 2[0m
     [1;32m      1[0m ([43mgt_tbl[49m
     [0;32m----> 2[0m [43m  [49m[38;5;241;43m.[39;49m[43mtab_spanner[49m[43m([49m[43mlabel[49m[43m [49m[38;5;241;43m=[39;49m[43m [49m[38;5;124;43m"[39;49m[38;5;124;43mNew Spanner[39;49m[38;5;124;43m"[39;49m[43m,[49m[43m [49m
     [1;32m      3[0m [43m               [49m[43mspanners[49m[43m [49m[38;5;241;43m=[39;49m[43m [49m[43m[[49m[38;5;124;43m"[39;49m[38;5;124;43mHorse Power[39;49m[38;5;124;43m"[39;49m[43m,[49m[43m [49m[38;5;124;43m"[39;49m[38;5;124;43mWeight[39;49m[38;5;124;43m"[39;49m[43m][49m[43m)[49m)

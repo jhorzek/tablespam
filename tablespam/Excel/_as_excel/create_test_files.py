@@ -1,6 +1,6 @@
 import openpyxl.workbook
 from tablespam import TableSpam  # noqa: D100
-from tablespam.Excel.xlsx_styles import CellStyle, XlsxStyles, DataStyle
+from tablespam.Excel.xlsx_styles import CellStyle, XlsxStyles, DataStyle, style_color
 import polars as pl
 import openpyxl
 
@@ -91,6 +91,13 @@ def create_test_files_cars(
 
     if target_dir is not None:
         results['cars'].save(f'{target_dir}/cars.xlsx')
+
+    results['cars_color_1'] = tbl.as_excel(styles=style_color('008080'))
+    results['cars_color_2'] = tbl.as_excel(styles=style_color('FFFFC5'))
+
+    if target_dir is not None:
+        results['cars_color_1'].save(f'{target_dir}/cars_color_1.xlsx')
+        results['cars_color_2'].save(f'{target_dir}/cars_color_2.xlsx')
 
     # Complex merging of rownames
     summarized_table_merge = summarized_table

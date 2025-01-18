@@ -8,8 +8,15 @@ formats. To this end, tablespam leverages the awesome packages great_tables
 """
 
 from tablespam.TableSpam import TableSpam
-from tablespam.Excel.xlsx_styles import XlsxStyles, DataStyle, CellStyle
+from tablespam.Excel.xlsx_styles import XlsxStyles, DataStyle, CellStyle, style_color
 from tablespam.GT.formatting import default_formatting
 
 # Define the exports for the package
-__all__ = ['TableSpam', 'XlsxStyles', 'DataStyle', 'CellStyle', 'default_formatting']
+__all__ = [
+    'TableSpam',
+    'XlsxStyles',
+    'DataStyle',
+    'CellStyle',
+    'style_color',
+    'default_formatting',
+]

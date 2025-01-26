@@ -8,7 +8,8 @@ from openpyxl.utils import get_column_interval
 from openpyxl.cell.cell import Cell
 import polars as pl
 from tablespam.Excel._as_excel.write_excel import write_excel_col
-from tablespam.Excel.xlsx_styles import XlsxStyles, set_region_style
+from tablespam.Excel.xlsx_styles import XlsxStyles
+from tablespam.Excel._as_excel.styles import set_region_style
 from tablespam.Excel._as_excel.locations import Locations
 import numpy as np
 

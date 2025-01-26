@@ -4,3 +4,4 @@ __pycache__/
 *.xlsx
 !tests/data/*.xlsx
 .Rhistory
+docs/_build/

@@ -22,11 +22,11 @@ jobs:
       - name: Install package
         run: |
           poetry install
-          pip install sphinx furo myst_parser sphinxcontrib-napoleon 
+          poetry run pip install sphinx furo myst_parser sphinxcontrib-napoleon 
       - name: Sphinx build
         run: |
           cd docs
-          make html
+          poetry run make html
       - name: Assets
         run: |
           cp -r assets ./docs/_build/html/

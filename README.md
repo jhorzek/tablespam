@@ -36,8 +36,11 @@ following formats:
 
 ## Installation
 
-`tablespam` is not yet available from pip. To install the development
-version from GitHub, run:
+`tablespam` is available from pip:
+
+    pip install tablespam
+
+To install the development version from GitHub, run:
 
     pip install git+https://github.com/jhorzek/tablespam.git#egg=tablespam
 

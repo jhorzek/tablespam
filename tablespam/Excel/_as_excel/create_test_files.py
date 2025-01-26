@@ -66,14 +66,18 @@ def create_test_files_cars(
         }
     )
 
-    summarized_table = cars.group_by(['cyl', 'vs'], maintain_order=True).agg(
-        [
-            pl.len().alias('N'),
-            pl.col('hp').mean().alias('mean_hp'),
-            pl.col('hp').std().alias('sd_hp'),
-            pl.col('wt').mean().alias('mean_wt'),
-            pl.col('wt').std().alias('sd_wt'),
-        ]
+    summarized_table = (
+        cars.group_by(['cyl', 'vs'], maintain_order=True)
+        .agg(
+            [
+                pl.len().alias('N'),
+                pl.col('hp').mean().alias('mean_hp'),
+                pl.col('hp').std().alias('sd_hp'),
+                pl.col('wt').mean().alias('mean_wt'),
+                pl.col('wt').std().alias('sd_wt'),
+            ]
+        )
+        .sort(pl.col('cyl'), pl.col('vs'))
     )
 
     tbl = TableSpam(

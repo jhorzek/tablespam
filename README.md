@@ -27,9 +27,12 @@ following formats:
 
 - **Excel** (using
   [`openpyxl`](https://openpyxl.readthedocs.io/en/stable/))
-- **HTML** (using [`gt`](https://gt.rstudio.com/))
-- **LaTeX** (using [`gt`](https://gt.rstudio.com/))
-- **RTF** (using [`gt`](https://gt.rstudio.com/))
+- **HTML** (using
+  [`great_tables`](https://posit-dev.github.io/great-tables/articles/intro.html))
+- **LaTeX** (using
+  [`great_tables`](https://posit-dev.github.io/great-tables/articles/intro.html))
+- **RTF** (using
+  [`great_tables`](https://posit-dev.github.io/great-tables/articles/intro.html))
 
 ## Installation
 
@@ -479,14 +482,9 @@ print(tbl.as_string())
 
 ## References
 
-- gt: Iannone R, Cheng J, Schloerke B, Hughes E, Lauer A, Seo J,
-  Brevoort K, Roy O (2024). gt: Easily Create Presentation-Ready Display
-  Tables. R package version 0.11.1.9000,
-  <https://github.com/rstudio/gt>, <https://gt.rstudio.com>.
-- expss: Gregory D et al. (2024). expss: Tables with Labels in R. R
-  package version 0.9.31, <https://gdemin.github.io/expss/>.
+- great_tables: Iannone R., et al.,
+  https://posit-dev.github.io/great-tables/articles/intro.html
 - tables: Murdoch D (2024). tables: Formula-Driven Table Generation. R
   package version 0.9.31, <https://dmurdoch.github.io/tables/>.
-- openxlsx: Schauberger P, Walker A (2023). *openxlsx: Read, Write and
-  Edit xlsx Files*. R package version 4.2.5.2,
-  <https://ycphs.github.io/openxlsx/>.
+- openpyxl: Gazoni, E. & Clark C.,
+  https://openpyxl.readthedocs.io/en/stable/

@@ -13,14 +13,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
       - name: Install dependencies
         run: |
-          pip install sphinx sphinx_rtd_theme myst_parser sphinxcontrib-napoleon 
+          python -m pip install --upgrade pip
+          python -m pip install poetry
+      - name: Install package
+        run: |
+          poetry install
+          pip install sphinx furo myst_parser sphinxcontrib-napoleon 
       - name: Sphinx build
         run: |
-          sphinx-build docs _build
+          cd docs
+          make html
       - name: Assets
-        run: cp -r assets ./docs/_build/html/
+        run: |
+          cp -r assets ./docs/_build/html/
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}

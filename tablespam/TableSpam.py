@@ -31,12 +31,13 @@ class TableSpam:
     as the row labels and `Sepal_Length` and `Sepal_Width` as columns. The output
     will look like:
 
-    ```
-    | Species | Sepal_Length | Sepal_Width |
-    |:--------|-------------:|------------:|
-    | setosa  |          5.1 |         3.5 |
-    | setosa  |          4.9 |         3.0 |
-    ```
+    .. code-block::
+
+        | Species | Sepal_Length | Sepal_Width |
+        |:--------|-------------:|------------:|
+        | setosa  |          5.1 |         3.5 |
+        | setosa  |          4.9 |         3.0 |
+
 
     Note that the row labels (`Species`) are in a separate block to the left.
 
@@ -46,12 +47,13 @@ class TableSpam:
 
     This results in an output like:
 
-    ```
-    |         |      Sepal     |      Petal     |
-    | Species | Length | Width | Length | Width |
-    |:--------|-------:|------:|-------:|------:|
-    | setosa  |    5.1 |   3.5 |    1.4 |   0.2 |
-    ```
+    .. code-block::
+
+        |         |      Sepal     |      Petal     |
+        | Species | Length | Width | Length | Width |
+        |:--------|-------:|------:|-------:|------:|
+        | setosa  |    5.1 |   3.5 |    1.4 |   0.2 |
+
 
     Nested spanners can also be defined, e.g.,
     `Species ~ (Sepal = (Length = Sepal_Length) + (Width = Sepal_Width))`.
@@ -59,12 +61,12 @@ class TableSpam:
     When exporting tables, you can rename columns in the headers. For example,
     `Species ~ (Sepal = Length:Sepal_Length + Width:Sepal_Width)` creates:
 
-    ```
-    |         |      Sepal     |      Petal     |
-    | Species | Length | Width | Length | Width |
-    |:--------|-------:|------:|-------:|------:|
-    | setosa  |    5.1 |   3.5 |    1.4 |   0.2 |
-    ```
+    .. code-block::
+
+        |         |      Sepal     |      Petal     |
+        | Species | Length | Width | Length | Width |
+        |:--------|-------:|------:|-------:|------:|
+        | setosa  |    5.1 |   3.5 |    1.4 |   0.2 |
 
     To create a table without row labels, use:
 
@@ -72,12 +74,12 @@ class TableSpam:
 
     This creates:
 
-    ```
-    |      Sepal     |      Petal     |
-    | Length | Width | Length | Width |
-    |-------:|------:|-------:|------:|
-    |    5.1 |   3.5 |    1.4 |   0.2 |
-    ```
+    .. code-block::
+
+        |      Sepal     |      Petal     |
+        | Length | Width | Length | Width |
+        |-------:|------:|-------:|------:|
+        |    5.1 |   3.5 |    1.4 |   0.2 |
 
     Tables created with `tablespam` can be exported to Excel (using `openpyxl`),
     HTML (using `great_tables`), and LaTeX (using `great_tables`).
@@ -87,247 +89,17 @@ class TableSpam:
     - `great_tables`: https://posit-dev.github.io/great-tables/articles/intro.html
 
     Examples:
-    >>> from tablespam import TableSpam
-    >>> import polars as pl
-    >>> cars = pl.DataFrame(
-    ...     {
-    ...         'mpg': [21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2],
-    ...         'cyl': [6, 6, 4, 6, 8, 6, 8, 4, 4, 6],
-    ...         'disp': [
-    ...             160.0,
-    ...             160.0,
-    ...             108.0,
-    ...             258.0,
-    ...             360.0,
-    ...             225.0,
-    ...             360.0,
-    ...             146.7,
-    ...             140.8,
-    ...             167.6,
-    ...         ],
-    ...         'hp': [110, 110, 93, 110, 175, 105, 245, 62, 95, 123],
-    ...         'drat': [
-    ...             3.90,
-    ...             3.90,
-    ...             3.85,
-    ...             3.08,
-    ...             3.15,
-    ...             2.76,
-    ...             3.21,
-    ...             4.08,
-    ...             3.92,
-    ...             3.92,
-    ...         ],
-    ...         'wt': [
-    ...             2.620,
-    ...             2.875,
-    ...             2.320,
-    ...             3.215,
-    ...             3.440,
-    ...             3.460,
-    ...             3.570,
-    ...             3.190,
-    ...             3.150,
-    ...             3.440,
-    ...         ],
-    ...         'qsec': [
-    ...             16.46,
-    ...             17.02,
-    ...             18.61,
-    ...             19.44,
-    ...             17.02,
-    ...             20.22,
-    ...             15.84,
-    ...             20.00,
-    ...             22.90,
-    ...             18.30,
-    ...         ],
-    ...         'vs': [0, 0, 1, 1, 0, 1, 0, 1, 1, 1],
-    ...         'am': [1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-    ...         'gear': [4, 4, 4, 3, 3, 3, 3, 4, 4, 4],
-    ...         'carb': [4, 4, 1, 1, 2, 1, 4, 2, 2, 4],
-    ...     }
-    ... )
-    >>> summarized_table = (
-    ...     cars.group_by(['cyl', 'vs'])
-    ...     .agg(
-    ...         [
-    ...             pl.len().alias('N'),
-    ...             pl.col('hp').mean().alias('mean_hp'),
-    ...             pl.col('hp').std().alias('sd_hp'),
-    ...             pl.col('wt').mean().alias('mean_wt'),
-    ...             pl.col('wt').std().alias('sd_wt'),
-    ...         ]
-    ...     )
-    ...     .sort(['cyl', 'vs'])
-    ... )
-    >>> tbl = TableSpam(
-    ...     data=summarized_table,
-    ...     formula='''Cylinder:cyl + Engine:vs ~
-    ...                 N +
-    ...                 (`Horse Power` = Mean:mean_hp + SD:sd_hp) +
-    ...                 (`Weight` = Mean:mean_wt + SD:sd_wt)''',
-    ...     title='Motor Trend Car Road Tests',
-    ...     subtitle='A table created with tablespam',
-    ...     footnote='Data from the infamous mtcars data set.',
-    ... )
-    >>> print(tbl.as_string())
-    Motor Trend Car Road Tests
-    A table created with tablespam
-    <BLANKLINE>
-    |                 |     Horse Power      Weight      |
-    | Cylinder Engine | N   Mean        SD   Mean   SD   |
-    | -------- ------ - --- ----------- ---- ------ ---- |
-    | 4        1      | 3   83.33       18.5 2.89   0.49 |
-    | 6        0      | 2   110.0       0.0  2.75   0.18 |
-    | 6        1      | 3   112.67      9.29 3.37   0.14 |
-    | ...      ...    | ... ...         ...  ...    ...  |
-    Data from the infamous mtcars data set.
-    <BLANKLINE>
-    """
-
-    def __init__(
-        self,
-        data: pl.DataFrame,
-        formula: str,
-        title: str | None = None,
-        subtitle: str | None = None,
-        footnote: str | None = None,
-    ):
-        """Create complex table spanners with a simple formula.
-
-        `tablespam` provides a formula-based approach to adding headers and spanners
-        to an existing polars DataFrame. The goal is to provide a unified, easy-to-use,
-        but good-enough approach to building and exporting tables to Excel, HTML,
-        and LaTeX. To this end, `tablespam` leverages the powerful packages `openpyxl`
-        and `great_tables`.
-
-        The table headers are defined with a basic formula-inspired approach. For
-        example, `Species ~ Sepal_Length + Sepal_Width` defines a table with `Species`
-        as the row labels and `Sepal_Length` and `Sepal_Width` as columns. The output
-        will look like:
-
-        ```
-        | Species | Sepal_Length | Sepal_Width |
-        |:--------|-------------:|------------:|
-        | setosa  |          5.1 |         3.5 |
-        | setosa  |          4.9 |         3.0 |
-        ```
-
-        Note that the row labels (`Species`) are in a separate block to the left.
-
-        You can add spanner labels as follows:
-
-        `Species ~ (Sepal = Sepal_Length + Sepal_Width) + (Petal = Petal_Length + Petal_Width)`
-
-        This results in an output like:
-
-        ```
-        |         |      Sepal     |      Petal     |
-        | Species | Length | Width | Length | Width |
-        |:--------|-------:|------:|-------:|------:|
-        | setosa  |    5.1 |   3.5 |    1.4 |   0.2 |
-        ```
-
-        Nested spanners can also be defined, e.g.,
-        `Species ~ (Sepal = (Length = Sepal_Length) + (Width = Sepal_Width))`.
-
-        When exporting tables, you can rename columns in the headers. For example,
-        `Species ~ (Sepal = Length:Sepal_Length + Width:Sepal_Width)` creates:
-
-        ```
-        |         |      Sepal     |      Petal     |
-        | Species | Length | Width | Length | Width |
-        |:--------|-------:|------:|-------:|------:|
-        | setosa  |    5.1 |   3.5 |    1.4 |   0.2 |
-        ```
-
-        To create a table without row labels, use:
-
-        `1 ~ (Sepal = Length:Sepal_Length + Width:Sepal_Width) + (Petal = Length:Petal_Length + Width:Petal_Width)`
-
-        This creates:
-
-        ```
-        |      Sepal     |      Petal     |
-        | Length | Width | Length | Width |
-        |-------:|------:|-------:|------:|
-        |    5.1 |   3.5 |    1.4 |   0.2 |
-        ```
-
-        Tables created with `tablespam` can be exported to Excel (using `openpyxl`),
-        HTML (using `great_tables`), and LaTeX (using `great_tables`).
-
-        References:
-        - `openpyxl`: https://openpyxl.readthedocs.io/
-        - `great_tables`: https://posit-dev.github.io/great-tables/articles/intro.html
-
-        Args:
-            data (pl.DataFrame): Polars data frame with the data that should be shown in the table.
-            formula (str): The tables for TableSpam are described in a single formula. See above for a detailed description.
-            title (str | None, optional): The title of the table. Defaults to None.
-            subtitle (str | None, optional): The subtitle of the table. Defaults to None.
-            footnote (str | None, optional): The footnote of the table. Defaults to None.
-
-        Returns:
-            TableSpam: An object containing the title, subtitle, header info, data, and footnote.
-
-        Example:
         >>> from tablespam import TableSpam
         >>> import polars as pl
         >>> cars = pl.DataFrame(
         ...     {
         ...         'mpg': [21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2],
         ...         'cyl': [6, 6, 4, 6, 8, 6, 8, 4, 4, 6],
-        ...         'disp': [
-        ...             160.0,
-        ...             160.0,
-        ...             108.0,
-        ...             258.0,
-        ...             360.0,
-        ...             225.0,
-        ...             360.0,
-        ...             146.7,
-        ...             140.8,
-        ...             167.6,
-        ...         ],
+        ...         'disp': [160.0, 160.0, 108.0, 258.0, 360.0, 225.0, 360.0, 146.7, 140.8, 167.6,],
         ...         'hp': [110, 110, 93, 110, 175, 105, 245, 62, 95, 123],
-        ...         'drat': [
-        ...             3.90,
-        ...             3.90,
-        ...             3.85,
-        ...             3.08,
-        ...             3.15,
-        ...             2.76,
-        ...             3.21,
-        ...             4.08,
-        ...             3.92,
-        ...             3.92,
-        ...         ],
-        ...         'wt': [
-        ...             2.620,
-        ...             2.875,
-        ...             2.320,
-        ...             3.215,
-        ...             3.440,
-        ...             3.460,
-        ...             3.570,
-        ...             3.190,
-        ...             3.150,
-        ...             3.440,
-        ...         ],
-        ...         'qsec': [
-        ...             16.46,
-        ...             17.02,
-        ...             18.61,
-        ...             19.44,
-        ...             17.02,
-        ...             20.22,
-        ...             15.84,
-        ...             20.00,
-        ...             22.90,
-        ...             18.30,
-        ...         ],
+        ...         'drat': [3.90, 3.90, 3.85, 3.08, 3.15, 2.76, 3.21, 4.08, 3.92, 3.92,],
+        ...         'wt': [2.620, 2.875, 2.320, 3.215, 3.440, 3.460, 3.570, 3.190, 3.150, 3.440,],
+        ...         'qsec': [16.46, 17.02, 18.61, 19.44, 17.02, 20.22, 15.84, 20.00, 22.90, 18.30,],
         ...         'vs': [0, 0, 1, 1, 0, 1, 0, 1, 1, 1],
         ...         'am': [1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
         ...         'gear': [4, 4, 4, 3, 3, 3, 3, 4, 4, 4],
@@ -370,6 +142,150 @@ class TableSpam:
         | ...      ...    | ... ...         ...  ...    ...  |
         Data from the infamous mtcars data set.
         <BLANKLINE>
+    """
+
+    def __init__(
+        self,
+        data: pl.DataFrame,
+        formula: str,
+        title: str | None = None,
+        subtitle: str | None = None,
+        footnote: str | None = None,
+    ):
+        """Create complex table spanners with a simple formula.
+
+        `tablespam` provides a formula-based approach to adding headers and spanners
+        to an existing polars DataFrame. The goal is to provide a unified, easy-to-use,
+        but good-enough approach to building and exporting tables to Excel, HTML,
+        and LaTeX. To this end, `tablespam` leverages the powerful packages `openpyxl`
+        and `great_tables`.
+
+        The table headers are defined with a basic formula-inspired approach. For
+        example, `Species ~ Sepal_Length + Sepal_Width` defines a table with `Species`
+        as the row labels and `Sepal_Length` and `Sepal_Width` as columns. The output
+        will look like:
+
+        .. code-block::
+
+            | Species | Sepal_Length | Sepal_Width |
+            |:--------|-------------:|------------:|
+            | setosa  |          5.1 |         3.5 |
+            | setosa  |          4.9 |         3.0 |
+
+
+        Note that the row labels (`Species`) are in a separate block to the left.
+
+        You can add spanner labels as follows:
+
+        `Species ~ (Sepal = Sepal_Length + Sepal_Width) + (Petal = Petal_Length + Petal_Width)`
+
+        This results in an output like:
+
+        .. code-block::
+
+            |         |      Sepal     |      Petal     |
+            | Species | Length | Width | Length | Width |
+            |:--------|-------:|------:|-------:|------:|
+            | setosa  |    5.1 |   3.5 |    1.4 |   0.2 |
+
+
+        Nested spanners can also be defined, e.g.,
+        `Species ~ (Sepal = (Length = Sepal_Length) + (Width = Sepal_Width))`.
+
+        When exporting tables, you can rename columns in the headers. For example,
+        `Species ~ (Sepal = Length:Sepal_Length + Width:Sepal_Width)` creates:
+
+        .. code-block::
+
+            |         |      Sepal     |      Petal     |
+            | Species | Length | Width | Length | Width |
+            |:--------|-------:|------:|-------:|------:|
+            | setosa  |    5.1 |   3.5 |    1.4 |   0.2 |
+
+        To create a table without row labels, use:
+
+        `1 ~ (Sepal = Length:Sepal_Length + Width:Sepal_Width) + (Petal = Length:Petal_Length + Width:Petal_Width)`
+
+        This creates:
+
+        .. code-block::
+
+            |      Sepal     |      Petal     |
+            | Length | Width | Length | Width |
+            |-------:|------:|-------:|------:|
+            |    5.1 |   3.5 |    1.4 |   0.2 |
+
+        Tables created with `tablespam` can be exported to Excel (using `openpyxl`),
+        HTML (using `great_tables`), and LaTeX (using `great_tables`).
+
+        References:
+        - `openpyxl`: https://openpyxl.readthedocs.io/
+        - `great_tables`: https://posit-dev.github.io/great-tables/articles/intro.html
+
+        Args:
+            data (pl.DataFrame): Polars data frame with the data that should be shown in the table.
+            formula (str): The tables for TableSpam are described in a single formula. See above for a detailed description.
+            title (str | None, optional): The title of the table. Defaults to None.
+            subtitle (str | None, optional): The subtitle of the table. Defaults to None.
+            footnote (str | None, optional): The footnote of the table. Defaults to None.
+
+        Returns:
+            TableSpam: An object containing the title, subtitle, header info, data, and footnote.
+
+        Examples:
+            >>> from tablespam import TableSpam
+            >>> import polars as pl
+            >>> cars = pl.DataFrame(
+            ...     {
+            ...         'mpg': [21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2],
+            ...         'cyl': [6, 6, 4, 6, 8, 6, 8, 4, 4, 6],
+            ...         'disp': [160.0, 160.0, 108.0, 258.0, 360.0, 225.0, 360.0, 146.7, 140.8, 167.6,],
+            ...         'hp': [110, 110, 93, 110, 175, 105, 245, 62, 95, 123],
+            ...         'drat': [3.90, 3.90, 3.85, 3.08, 3.15, 2.76, 3.21, 4.08, 3.92, 3.92,],
+            ...         'wt': [2.620, 2.875, 2.320, 3.215, 3.440, 3.460, 3.570, 3.190, 3.150, 3.440,],
+            ...         'qsec': [16.46, 17.02, 18.61, 19.44, 17.02, 20.22, 15.84, 20.00, 22.90, 18.30,],
+            ...         'vs': [0, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+            ...         'am': [1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+            ...         'gear': [4, 4, 4, 3, 3, 3, 3, 4, 4, 4],
+            ...         'carb': [4, 4, 1, 1, 2, 1, 4, 2, 2, 4],
+            ...     }
+            ... )
+            >>> summarized_table = (
+            ...     cars.group_by(['cyl', 'vs'])
+            ...     .agg(
+            ...         [
+            ...             pl.len().alias('N'),
+            ...             pl.col('hp').mean().alias('mean_hp'),
+            ...             pl.col('hp').std().alias('sd_hp'),
+            ...             pl.col('wt').mean().alias('mean_wt'),
+            ...             pl.col('wt').std().alias('sd_wt'),
+            ...         ]
+            ...     )
+            ...     .sort(['cyl', 'vs'])
+            ... )
+            >>> tbl = TableSpam(
+            ...     data=summarized_table,
+            ...     formula='''Cylinder:cyl + Engine:vs ~
+            ...                 N +
+            ...                 (`Horse Power` = Mean:mean_hp + SD:sd_hp) +
+            ...                 (`Weight` = Mean:mean_wt + SD:sd_wt)''',
+            ...     title='Motor Trend Car Road Tests',
+            ...     subtitle='A table created with tablespam',
+            ...     footnote='Data from the infamous mtcars data set.',
+            ... )
+            >>> print(tbl.as_string())
+            Motor Trend Car Road Tests
+            A table created with tablespam
+            <BLANKLINE>
+            |                 |     Horse Power      Weight      |
+            | Cylinder Engine | N   Mean        SD   Mean   SD   |
+            | -------- ------ - --- ----------- ---- ------ ---- |
+            | 4        1      | 3   83.33       18.5 2.89   0.49 |
+            | 6        0      | 2   110.0       0.0  2.75   0.18 |
+            | 6        1      | 3   112.67      9.29 3.37   0.14 |
+            | ...      ...    | ... ...         ...  ...    ...  |
+            Data from the infamous mtcars data set.
+            <BLANKLINE>
         """
         self.data = data
 
@@ -407,104 +323,60 @@ class TableSpam:
         Returns:
             str: String describing the table
 
-        Example:
-        >>> from tablespam import TableSpam
-        >>> import polars as pl
-        >>> cars = pl.DataFrame(
-        ...     {
-        ...         'mpg': [21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2],
-        ...         'cyl': [6, 6, 4, 6, 8, 6, 8, 4, 4, 6],
-        ...         'disp': [
-        ...             160.0,
-        ...             160.0,
-        ...             108.0,
-        ...             258.0,
-        ...             360.0,
-        ...             225.0,
-        ...             360.0,
-        ...             146.7,
-        ...             140.8,
-        ...             167.6,
-        ...         ],
-        ...         'hp': [110, 110, 93, 110, 175, 105, 245, 62, 95, 123],
-        ...         'drat': [
-        ...             3.90,
-        ...             3.90,
-        ...             3.85,
-        ...             3.08,
-        ...             3.15,
-        ...             2.76,
-        ...             3.21,
-        ...             4.08,
-        ...             3.92,
-        ...             3.92,
-        ...         ],
-        ...         'wt': [
-        ...             2.620,
-        ...             2.875,
-        ...             2.320,
-        ...             3.215,
-        ...             3.440,
-        ...             3.460,
-        ...             3.570,
-        ...             3.190,
-        ...             3.150,
-        ...             3.440,
-        ...         ],
-        ...         'qsec': [
-        ...             16.46,
-        ...             17.02,
-        ...             18.61,
-        ...             19.44,
-        ...             17.02,
-        ...             20.22,
-        ...             15.84,
-        ...             20.00,
-        ...             22.90,
-        ...             18.30,
-        ...         ],
-        ...         'vs': [0, 0, 1, 1, 0, 1, 0, 1, 1, 1],
-        ...         'am': [1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-        ...         'gear': [4, 4, 4, 3, 3, 3, 3, 4, 4, 4],
-        ...         'carb': [4, 4, 1, 1, 2, 1, 4, 2, 2, 4],
-        ...     }
-        ... )
-        >>> summarized_table = (
-        ...     cars.group_by(['cyl', 'vs'])
-        ...     .agg(
-        ...         [
-        ...             pl.len().alias('N'),
-        ...             pl.col('hp').mean().alias('mean_hp'),
-        ...             pl.col('hp').std().alias('sd_hp'),
-        ...             pl.col('wt').mean().alias('mean_wt'),
-        ...             pl.col('wt').std().alias('sd_wt'),
-        ...         ]
-        ...     )
-        ...     .sort(['cyl', 'vs'])
-        ... )
-        >>> tbl = TableSpam(
-        ...     data=summarized_table,
-        ...     formula='''Cylinder:cyl + Engine:vs ~
-        ...                 N +
-        ...                 (`Horse Power` = Mean:mean_hp + SD:sd_hp) +
-        ...                 (`Weight` = Mean:mean_wt + SD:sd_wt)''',
-        ...     title='Motor Trend Car Road Tests',
-        ...     subtitle='A table created with tablespam',
-        ...     footnote='Data from the infamous mtcars data set.',
-        ... )
-        >>> print(tbl.as_string())
-        Motor Trend Car Road Tests
-        A table created with tablespam
-        <BLANKLINE>
-        |                 |     Horse Power      Weight      |
-        | Cylinder Engine | N   Mean        SD   Mean   SD   |
-        | -------- ------ - --- ----------- ---- ------ ---- |
-        | 4        1      | 3   83.33       18.5 2.89   0.49 |
-        | 6        0      | 2   110.0       0.0  2.75   0.18 |
-        | 6        1      | 3   112.67      9.29 3.37   0.14 |
-        | ...      ...    | ... ...         ...  ...    ...  |
-        Data from the infamous mtcars data set.
-        <BLANKLINE>
+        Examples:
+            >>> from tablespam import TableSpam
+            >>> import polars as pl
+            >>> cars = pl.DataFrame(
+            ...     {
+            ...         'mpg': [21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2],
+            ...         'cyl': [6, 6, 4, 6, 8, 6, 8, 4, 4, 6],
+            ...         'disp': [160.0, 160.0, 108.0, 258.0, 360.0, 225.0, 360.0, 146.7, 140.8, 167.6,],
+            ...         'hp': [110, 110, 93, 110, 175, 105, 245, 62, 95, 123],
+            ...         'drat': [3.90, 3.90, 3.85, 3.08, 3.15, 2.76, 3.21, 4.08, 3.92, 3.92,],
+            ...         'wt': [2.620, 2.875, 2.320, 3.215, 3.440, 3.460, 3.570, 3.190, 3.150, 3.440,],
+            ...         'qsec': [16.46, 17.02, 18.61, 19.44, 17.02, 20.22, 15.84, 20.00, 22.90, 18.30,],
+            ...         'vs': [0, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+            ...         'am': [1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+            ...         'gear': [4, 4, 4, 3, 3, 3, 3, 4, 4, 4],
+            ...         'carb': [4, 4, 1, 1, 2, 1, 4, 2, 2, 4],
+            ...     }
+            ... )
+            >>> summarized_table = (
+            ...     cars.group_by(['cyl', 'vs'])
+            ...     .agg(
+            ...         [
+            ...             pl.len().alias('N'),
+            ...             pl.col('hp').mean().alias('mean_hp'),
+            ...             pl.col('hp').std().alias('sd_hp'),
+            ...             pl.col('wt').mean().alias('mean_wt'),
+            ...             pl.col('wt').std().alias('sd_wt'),
+            ...         ]
+            ...     )
+            ...     .sort(['cyl', 'vs'])
+            ... )
+            >>> tbl = TableSpam(
+            ...     data=summarized_table,
+            ...     formula='''Cylinder:cyl + Engine:vs ~
+            ...                 N +
+            ...                 (`Horse Power` = Mean:mean_hp + SD:sd_hp) +
+            ...                 (`Weight` = Mean:mean_wt + SD:sd_wt)''',
+            ...     title='Motor Trend Car Road Tests',
+            ...     subtitle='A table created with tablespam',
+            ...     footnote='Data from the infamous mtcars data set.',
+            ... )
+            >>> print(tbl.as_string())
+            Motor Trend Car Road Tests
+            A table created with tablespam
+            <BLANKLINE>
+            |                 |     Horse Power      Weight      |
+            | Cylinder Engine | N   Mean        SD   Mean   SD   |
+            | -------- ------ - --- ----------- ---- ------ ---- |
+            | 4        1      | 3   83.33       18.5 2.89   0.49 |
+            | 6        0      | 2   110.0       0.0  2.75   0.18 |
+            | 6        1      | 3   112.67      9.29 3.37   0.14 |
+            | ...      ...    | ... ...         ...  ...    ...  |
+            Data from the infamous mtcars data set.
+            <BLANKLINE>
         """
         return tbl_as_string(self, digits=digits, n=n, max_char=max_char)
 
@@ -540,83 +412,49 @@ class TableSpam:
         Returns:
             GtTable: A `gt` table object that can be further customized using the `gt` package.
 
-        Example:
-        ```python
-        from tablespam import TableSpam
-        import polars as pl
-
-        cars = pl.DataFrame(
-            {
-                'mpg': [21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2],
-                'cyl': [6, 6, 4, 6, 8, 6, 8, 4, 4, 6],
-                'disp': [
-                    160.0,
-                    160.0,
-                    108.0,
-                    258.0,
-                    360.0,
-                    225.0,
-                    360.0,
-                    146.7,
-                    140.8,
-                    167.6,
-                ],
-                'hp': [110, 110, 93, 110, 175, 105, 245, 62, 95, 123],
-                'drat': [3.90, 3.90, 3.85, 3.08, 3.15, 2.76, 3.21, 4.08, 3.92, 3.92],
-                'wt': [
-                    2.620,
-                    2.875,
-                    2.320,
-                    3.215,
-                    3.440,
-                    3.460,
-                    3.570,
-                    3.190,
-                    3.150,
-                    3.440,
-                ],
-                'qsec': [
-                    16.46,
-                    17.02,
-                    18.61,
-                    19.44,
-                    17.02,
-                    20.22,
-                    15.84,
-                    20.00,
-                    22.90,
-                    18.30,
-                ],
-                'vs': [0, 0, 1, 1, 0, 1, 0, 1, 1, 1],
-                'am': [1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-                'gear': [4, 4, 4, 3, 3, 3, 3, 4, 4, 4],
-                'carb': [4, 4, 1, 1, 2, 1, 4, 2, 2, 4],
-            }
-        )
-
-        summarized_table = cars.group_by(['cyl', 'vs']).agg(
-            [
-                pl.len().alias('N'),
-                pl.col('hp').mean().alias('mean_hp'),
-                pl.col('hp').std().alias('sd_hp'),
-                pl.col('wt').mean().alias('mean_wt'),
-                pl.col('wt').std().alias('sd_wt'),
-            ]
-        )
-
-        tbl = TableSpam(
-            data=summarized_table,
-            formula='''Cylinder:cyl + Engine:vs ~
-                        N +
-                        (`Horse Power` = Mean:mean_hp + SD:sd_hp) +
-                        (`Weight` = Mean:mean_wt + SD:sd_wt)''',
-            title='Motor Trend Car Road Tests',
-            subtitle='A table created with tablespam',
-            footnote='Data from the infamous mtcars data set.',
-        )
-
-        tbl.as_gt()  # Use tbl.as_gt().show() to show the table in the browser.
-        ```
+        Examples:
+            >>> from tablespam import TableSpam
+            >>> import polars as pl
+            >>> cars = pl.DataFrame(
+            ...     {
+            ...         'mpg': [21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2],
+            ...         'cyl': [6, 6, 4, 6, 8, 6, 8, 4, 4, 6],
+            ...         'disp': [160.0, 160.0, 108.0, 258.0, 360.0, 225.0, 360.0, 146.7, 140.8, 167.6,],
+            ...         'hp': [110, 110, 93, 110, 175, 105, 245, 62, 95, 123],
+            ...         'drat': [3.90, 3.90, 3.85, 3.08, 3.15, 2.76, 3.21, 4.08, 3.92, 3.92,],
+            ...         'wt': [2.620, 2.875, 2.320, 3.215, 3.440, 3.460, 3.570, 3.190, 3.150, 3.440,],
+            ...         'qsec': [16.46, 17.02, 18.61, 19.44, 17.02, 20.22, 15.84, 20.00, 22.90, 18.30,],
+            ...         'vs': [0, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+            ...         'am': [1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+            ...         'gear': [4, 4, 4, 3, 3, 3, 3, 4, 4, 4],
+            ...         'carb': [4, 4, 1, 1, 2, 1, 4, 2, 2, 4],
+            ...     }
+            ... )
+            >>> summarized_table = (
+            ...     cars.group_by(['cyl', 'vs'])
+            ...     .agg(
+            ...         [
+            ...             pl.len().alias('N'),
+            ...             pl.col('hp').mean().alias('mean_hp'),
+            ...             pl.col('hp').std().alias('sd_hp'),
+            ...             pl.col('wt').mean().alias('mean_wt'),
+            ...             pl.col('wt').std().alias('sd_wt'),
+            ...         ]
+            ...     )
+            ...     .sort(['cyl', 'vs'])
+            ... )
+            >>> tbl = TableSpam(
+            ...     data=summarized_table,
+            ...     formula='''Cylinder:cyl + Engine:vs ~
+            ...                 N +
+            ...                 (`Horse Power` = Mean:mean_hp + SD:sd_hp) +
+            ...                 (`Weight` = Mean:mean_wt + SD:sd_wt)''',
+            ...     title='Motor Trend Car Road Tests',
+            ...     subtitle='A table created with tablespam',
+            ...     footnote='Data from the infamous mtcars data set.',
+            ... )
+            >>> gt_tbl = tbl.as_gt()
+            >>> # Use tbl.as_gt().show() to show the table in the browser.
         """
         if (
             (self.header['lhs'] is not None)
@@ -695,84 +533,49 @@ class TableSpam:
             opy.Workbook: openpyxl workbook
 
 
-        Example:
-        ```python
-        from tablespam import TableSpam
-        import polars as pl
-
-        cars = pl.DataFrame(
-            {
-                'mpg': [21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2],
-                'cyl': [6, 6, 4, 6, 8, 6, 8, 4, 4, 6],
-                'disp': [
-                    160.0,
-                    160.0,
-                    108.0,
-                    258.0,
-                    360.0,
-                    225.0,
-                    360.0,
-                    146.7,
-                    140.8,
-                    167.6,
-                ],
-                'hp': [110, 110, 93, 110, 175, 105, 245, 62, 95, 123],
-                'drat': [3.90, 3.90, 3.85, 3.08, 3.15, 2.76, 3.21, 4.08, 3.92, 3.92],
-                'wt': [
-                    2.620,
-                    2.875,
-                    2.320,
-                    3.215,
-                    3.440,
-                    3.460,
-                    3.570,
-                    3.190,
-                    3.150,
-                    3.440,
-                ],
-                'qsec': [
-                    16.46,
-                    17.02,
-                    18.61,
-                    19.44,
-                    17.02,
-                    20.22,
-                    15.84,
-                    20.00,
-                    22.90,
-                    18.30,
-                ],
-                'vs': [0, 0, 1, 1, 0, 1, 0, 1, 1, 1],
-                'am': [1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-                'gear': [4, 4, 4, 3, 3, 3, 3, 4, 4, 4],
-                'carb': [4, 4, 1, 1, 2, 1, 4, 2, 2, 4],
-            }
-        )
-
-        summarized_table = cars.group_by(['cyl', 'vs']).agg(
-            [
-                pl.len().alias('N'),
-                pl.col('hp').mean().alias('mean_hp'),
-                pl.col('hp').std().alias('sd_hp'),
-                pl.col('wt').mean().alias('mean_wt'),
-                pl.col('wt').std().alias('sd_wt'),
-            ]
-        )
-
-        tbl = TableSpam(
-            data=summarized_table,
-            formula='''Cylinder:cyl + Engine:vs ~
-                        N +
-                        (`Horse Power` = Mean:mean_hp + SD:sd_hp) +
-                        (`Weight` = Mean:mean_wt + SD:sd_wt)''',
-            title='Motor Trend Car Road Tests',
-            subtitle='A table created with tablespam',
-            footnote='Data from the infamous mtcars data set.',
-        )
-
-        wb = tbl.as_excel()  # Export to Excel workbook
-        # wb.save("tablespam_table.xlsx") # Write to an Excel file.
-        ```
+        Examples:
+            >>> from tablespam import TableSpam
+            >>> import polars as pl
+            >>> cars = pl.DataFrame(
+            ...     {
+            ...         'mpg': [21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2],
+            ...         'cyl': [6, 6, 4, 6, 8, 6, 8, 4, 4, 6],
+            ...         'disp': [160.0, 160.0, 108.0, 258.0, 360.0, 225.0, 360.0, 146.7, 140.8, 167.6,],
+            ...         'hp': [110, 110, 93, 110, 175, 105, 245, 62, 95, 123],
+            ...         'drat': [3.90, 3.90, 3.85, 3.08, 3.15, 2.76, 3.21, 4.08, 3.92, 3.92,],
+            ...         'wt': [2.620, 2.875, 2.320, 3.215, 3.440, 3.460, 3.570, 3.190, 3.150, 3.440,],
+            ...         'qsec': [16.46, 17.02, 18.61, 19.44, 17.02, 20.22, 15.84, 20.00, 22.90, 18.30,],
+            ...         'vs': [0, 0, 1, 1, 0, 1, 0, 1, 1, 1],
+            ...         'am': [1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+            ...         'gear': [4, 4, 4, 3, 3, 3, 3, 4, 4, 4],
+            ...         'carb': [4, 4, 1, 1, 2, 1, 4, 2, 2, 4],
+            ...     }
+            ... )
+            >>> summarized_table = (
+            ...     cars.group_by(['cyl', 'vs'])
+            ...     .agg(
+            ...         [
+            ...             pl.len().alias('N'),
+            ...             pl.col('hp').mean().alias('mean_hp'),
+            ...             pl.col('hp').std().alias('sd_hp'),
+            ...             pl.col('wt').mean().alias('mean_wt'),
+            ...             pl.col('wt').std().alias('sd_wt'),
+            ...         ]
+            ...     )
+            ...     .sort(['cyl', 'vs'])
+            ... )
+            >>> tbl = TableSpam(
+            ...     data=summarized_table,
+            ...     formula='''Cylinder:cyl + Engine:vs ~
+            ...                 N +
+            ...                 (`Horse Power` = Mean:mean_hp + SD:sd_hp) +
+            ...                 (`Weight` = Mean:mean_wt + SD:sd_wt)''',
+            ...     title='Motor Trend Car Road Tests',
+            ...     subtitle='A table created with tablespam',
+            ...     footnote='Data from the infamous mtcars data set.',
+            ... )
+            >>> wb = tbl.as_excel()  # Export to Excel workbook
+            >>> # wb.save("tablespam_table.xlsx") # Write to an Excel file.
         """
         if workbook is None:
             workbook = opy.Workbook()

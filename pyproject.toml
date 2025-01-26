@@ -29,7 +29,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.ruff.format]
 quote-style = "single"
 indent-style = "space"
-docstring-code-format = true
+docstring-code-format = false
 
 [tool.ruff.lint]
 extend-select = ["D"]

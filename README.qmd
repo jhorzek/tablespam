@@ -52,23 +52,10 @@ good-enough table that is easy to create and share with others. This is where
 Let's assume that we want to share the following table:
 ```{python}
 import polars as pl
+>>> from tablespam.Data.mtcars import mtcars
 
-# Create data set inspired by the cars data in R:
-cars = pl.DataFrame(
-    {
-        'mpg': [21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2],
-        'cyl': [6, 6, 4, 6, 8, 6, 8, 4, 4, 6],
-        'disp': [160.0, 160.0, 108.0, 258.0, 360.0, 225.0, 360.0, 146.7, 140.8, 167.6],
-        'hp': [110, 110, 93, 110, 175, 105, 245, 62, 95, 123],
-        'drat': [3.90, 3.90, 3.85, 3.08, 3.15, 2.76, 3.21, 4.08, 3.92, 3.92],
-        'wt': [2.620, 2.875, 2.320, 3.215, 3.440, 3.460, 3.570, 3.190, 3.150, 3.440],
-        'qsec': [16.46, 17.02, 18.61, 19.44, 17.02, 20.22, 15.84, 20.00, 22.90, 18.30],
-        'vs': [0, 0, 1, 1, 0, 1, 0, 1, 1, 1],
-        'am': [1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-        'gear': [4, 4, 4, 3, 3, 3, 3, 4, 4, 4],
-        'carb': [4, 4, 1, 1, 2, 1, 4, 2, 2, 4],
-    }
-)
+# Import mtcars data from R:
+cars = mtcars()
 
 summarized_table = cars.group_by(['cyl', 'vs'], 
                                   maintain_order=True).agg(

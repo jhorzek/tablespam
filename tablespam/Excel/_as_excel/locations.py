@@ -1,4 +1,6 @@
-from __future__ import annotations  # noqa: D100
+"""Locations for the table elements in the xlsx file."""
+
+from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:

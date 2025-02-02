@@ -55,7 +55,7 @@ Let’s assume that we want to share the following table:
 
 ``` python
 import polars as pl
->>> from tablespam.Data.mtcars import mtcars
+from tablespam.Data.mtcars import mtcars
 
 # Import mtcars data from R:
 cars = mtcars()
@@ -69,7 +69,7 @@ summarized_table = cars.group_by(['cyl', 'vs'],
         pl.col('wt').mean().alias('mean_wt'),
         pl.col('wt').std().alias('sd_wt'),
     ]
-)
+).sort(pl.col('cyl', 'vs'))
 
 print(summarized_table)
 ```
@@ -80,11 +80,11 @@ print(summarized_table)
     │ --- ┆ --- ┆ --- ┆ ---        ┆ ---       ┆ ---      ┆ ---      │
     │ i64 ┆ i64 ┆ u32 ┆ f64        ┆ f64       ┆ f64      ┆ f64      │
     ╞═════╪═════╪═════╪════════════╪═══════════╪══════════╪══════════╡
-    │ 6   ┆ 0   ┆ 3   ┆ 131.666667 ┆ 37.527767 ┆ 2.755    ┆ 0.12816  │
+    │ 4   ┆ 0   ┆ 1   ┆ 91.0       ┆ null      ┆ 2.14     ┆ null     │
     │ 4   ┆ 1   ┆ 10  ┆ 81.8       ┆ 21.872357 ┆ 2.3003   ┆ 0.598207 │
+    │ 6   ┆ 0   ┆ 3   ┆ 131.666667 ┆ 37.527767 ┆ 2.755    ┆ 0.12816  │
     │ 6   ┆ 1   ┆ 4   ┆ 115.25     ┆ 9.17878   ┆ 3.38875  ┆ 0.116216 │
     │ 8   ┆ 0   ┆ 14  ┆ 209.214286 ┆ 50.976886 ┆ 3.999214 ┆ 0.759405 │
-    │ 4   ┆ 0   ┆ 1   ┆ 91.0       ┆ null      ┆ 2.14     ┆ null     │
     └─────┴─────┴─────┴────────────┴───────────┴──────────┴──────────┘
 
 > Note: `tablespam` currently only supports `polars` data frames.
@@ -116,9 +116,9 @@ print(tbl.as_string())
 
     | cyl | mean_hp sd_hp |
     | --- - ------- ----- |
-    | 6   | 131.67  37.53 |
+    | 4   | 91.0    None  |
     | 4   | 81.8    21.87 |
-    | 6   | 115.25  9.18  |
+    | 6   | 131.67  37.53 |
     | ... | ...     ...   |
 
 Note that the row names (`cyl`) are in a separate block to the left.
@@ -139,9 +139,9 @@ print(tbl.as_string())
     |     | Horsepower       |
     | cyl | mean_hp    sd_hp |
     | --- - ---------- ----- |
-    | 6   | 131.67     37.53 |
+    | 4   | 91.0       None  |
     | 4   | 81.8       21.87 |
-    | 6   | 115.25     9.18  |
+    | 6   | 131.67     37.53 |
     | ... | ...        ...   |
 
 Spanners can also be nested:
@@ -157,9 +157,9 @@ print(tbl.as_string())
     |     | Mean       SD    |
     | cyl | mean_hp    sd_hp |
     | --- - ---------- ----- |
-    | 6   | 131.67     37.53 |
+    | 4   | 91.0       None  |
     | 4   | 81.8       21.87 |
-    | 6   | 115.25     9.18  |
+    | 6   | 131.67     37.53 |
     | ... | ...        ...   |
 
 ### Renaming Columns
@@ -182,9 +182,9 @@ print(tbl.as_string())
     |     | Horsepower       |
     | cyl | Mean       SD    |
     | --- - ---------- ----- |
-    | 6   | 131.67     37.53 |
+    | 4   | 91.0       None  |
     | 4   | 81.8       21.87 |
-    | 6   | 115.25     9.18  |
+    | 6   | 131.67     37.53 |
     | ... | ...        ...   |
 
 ### Creating the Full Table
@@ -210,9 +210,9 @@ print(tbl.as_string())
     |                 |     Horse Power       Weight      |
     | Cylinder Engine | N   Mean        SD    Mean   SD   |
     | -------- ------ - --- ----------- ----- ------ ---- |
-    | 6        0      | 3   131.67      37.53 2.76   0.13 |
+    | 4        0      | 1   91.0        None  2.14   None |
     | 4        1      | 10  81.8        21.87 2.3    0.6  |
-    | 6        1      | 4   115.25      9.18  3.39   0.12 |
+    | 6        0      | 3   131.67      37.53 2.76   0.13 |
     | ...      ...    | ... ...         ...   ...    ...  |
     Data from the infamous mtcars data set.
 
@@ -466,9 +466,9 @@ print(tbl.as_string())
     | Horsepower       |
     | Mean       SD    |
     | ---------- ----- |
-    | 131.67     37.53 |
+    | 91.0       None  |
     | 81.8       21.87 |
-    | 115.25     9.18  |
+    | 131.67     37.53 |
     | ...        ...   |
 
 ## References

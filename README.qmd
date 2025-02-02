@@ -52,7 +52,7 @@ good-enough table that is easy to create and share with others. This is where
 Let's assume that we want to share the following table:
 ```{python}
 import polars as pl
->>> from tablespam.Data.mtcars import mtcars
+from tablespam.Data.mtcars import mtcars
 
 # Import mtcars data from R:
 cars = mtcars()
@@ -66,7 +66,7 @@ summarized_table = cars.group_by(['cyl', 'vs'],
         pl.col('wt').mean().alias('mean_wt'),
         pl.col('wt').std().alias('sd_wt'),
     ]
-)
+).sort(pl.col('cyl', 'vs'))
 
 print(summarized_table)
 ```

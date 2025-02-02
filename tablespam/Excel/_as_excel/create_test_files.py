@@ -4,13 +4,20 @@ import openpyxl.workbook
 from tablespam import TableSpam
 from tablespam.Excel.xlsx_styles import CellStyle, XlsxStyles, DataStyle, style_color
 from tablespam.Data.mtcars import mtcars
+from dataclasses import dataclass
 import polars as pl
 import openpyxl
 
 
+@dataclass
+class CarsTestFiles:
+    tbls: dict[str, TableSpam]
+    wbs: dict[str, openpyxl.workbook.Workbook]
+
+
 def create_test_files_cars(
     target_dir: str | None = None,
-) -> dict[str, openpyxl.workbook.Workbook]:
+) -> CarsTestFiles:
     """Create test excel files for internal tests.
 
     Args:
@@ -18,9 +25,9 @@ def create_test_files_cars(
         Returns:
             dict[str, openpyxl.workbook.Workbook]: dict with results.
     """
-    results = {}
-
     cars = mtcars()
+
+    results = CarsTestFiles(tbls={}, wbs={})
 
     summarized_table = (
         cars.group_by(['cyl', 'vs'], maintain_order=True)
@@ -47,17 +54,20 @@ def create_test_files_cars(
         footnote='Data from the infamous mtcars data set.',
     )
 
-    results['cars'] = tbl.as_excel()
+    results.tbls['cars'] = tbl
+    results.wbs['cars'] = tbl.as_excel()
 
     if target_dir is not None:
-        results['cars'].save(f'{target_dir}/cars.xlsx')
+        results.wbs['cars'].save(f'{target_dir}/cars.xlsx')
 
-    results['cars_color_1'] = tbl.as_excel(styles=style_color('008080'))
-    results['cars_color_2'] = tbl.as_excel(styles=style_color('FFFFC5'))
+    results.tbls['cars_color_1'] = tbl
+    results.wbs['cars_color_1'] = tbl.as_excel(styles=style_color('008080'))
+    results.tbls['cars_color_2'] = tbl
+    results.wbs['cars_color_2'] = tbl.as_excel(styles=style_color('FFFFC5'))
 
     if target_dir is not None:
-        results['cars_color_1'].save(f'{target_dir}/cars_color_1.xlsx')
-        results['cars_color_2'].save(f'{target_dir}/cars_color_2.xlsx')
+        results.wbs['cars_color_1'].save(f'{target_dir}/cars_color_1.xlsx')
+        results.wbs['cars_color_2'].save(f'{target_dir}/cars_color_2.xlsx')
 
     # Complex merging of rownames
     summarized_table_merge = summarized_table
@@ -80,18 +90,21 @@ def create_test_files_cars(
         footnote='Data from the infamous mtcars data set.',
     )
 
-    results['cars_complex_merge'] = tbl_merge.as_excel()
+    results.tbls['cars_complex_merge'] = tbl_merge
+    results.wbs['cars_complex_merge'] = tbl_merge.as_excel()
 
     if target_dir is not None:
-        results['cars_complex_merge'].save(f'{target_dir}/cars_complex_merge.xlsx')
+        results.wbs['cars_complex_merge'].save(f'{target_dir}/cars_complex_merge.xlsx')
 
     # offset
-    results['cars_offset'] = tbl.as_excel(start_row=3, start_col=5)
+    results.tbls['cars_offset'] = tbl
+    results.wbs['cars_offset'] = tbl.as_excel(start_row=3, start_col=5)
     if target_dir is not None:
-        results['cars_offset'].save(f'{target_dir}/cars_offset.xlsx')
+        results.wbs['cars_offset'].save(f'{target_dir}/cars_offset.xlsx')
 
     # custom cell styles
-    results['cars_cell_styles'] = tbl.as_excel(
+    results.tbls['cars_cell_styles'] = tbl
+    results.wbs['cars_cell_styles'] = tbl.as_excel(
         styles=XlsxStyles(
             cell_styles=[
                 CellStyle(
@@ -109,7 +122,7 @@ def create_test_files_cars(
     )
 
     if target_dir is not None:
-        results['cars_cell_styles'].save(f'{target_dir}/cars_cell_styles.xlsx')
+        results.wbs['cars_cell_styles'].save(f'{target_dir}/cars_cell_styles.xlsx')
 
     def test_double(x: pl.DataFrame) -> bool:
         if len(x.columns) != 1:
@@ -117,7 +130,8 @@ def create_test_files_cars(
         return all([tp in [pl.Float32, pl.Float64] for tp in x.dtypes])
 
     # custom data type styles
-    results['cars_data_styles'] = tbl.as_excel(
+    results.tbls['cars_data_styles'] = tbl
+    results.wbs['cars_data_styles'] = tbl.as_excel(
         styles=XlsxStyles(
             data_styles={
                 'double': DataStyle(
@@ -129,7 +143,7 @@ def create_test_files_cars(
     )
 
     if target_dir is not None:
-        results['cars_data_styles'].save(f'{target_dir}/cars_data_styles.xlsx')
+        results.wbs['cars_data_styles'].save(f'{target_dir}/cars_data_styles.xlsx')
 
     # Additional spanners
     tbl = TableSpam(
@@ -143,10 +157,11 @@ def create_test_files_cars(
         footnote='Data from the infamous mtcars data set.',
     )
 
-    results['cars_additional_spanners'] = tbl.as_excel()
+    results.tbls['cars_additional_spanners'] = tbl
+    results.wbs['cars_additional_spanners'] = tbl.as_excel()
 
     if target_dir is not None:
-        results['cars_additional_spanners'].save(
+        results.wbs['cars_additional_spanners'].save(
             f'{target_dir}/cars_additional_spanners.xlsx'
         )
 
@@ -162,10 +177,11 @@ def create_test_files_cars(
         footnote='Data from the infamous mtcars data set.',
     )
 
-    results['cars_additional_spanners_left_right'] = tbl.as_excel()
+    results.tbls['cars_additional_spanners_left_right'] = tbl
+    results.wbs['cars_additional_spanners_left_right'] = tbl.as_excel()
 
     if target_dir is not None:
-        results['cars_additional_spanners_left_right'].save(
+        results.wbs['cars_additional_spanners_left_right'].save(
             f'{target_dir}/cars_additional_spanners_left_right.xlsx'
         )
 
@@ -180,11 +196,11 @@ def create_test_files_cars(
         subtitle='A table created with tablespan',
         footnote='Data from the infamous mtcars data set.',
     )
-
-    results['cars_no_row_names'] = tbl.as_excel()
+    results.tbls['cars_no_row_names'] = tbl
+    results.wbs['cars_no_row_names'] = tbl.as_excel()
 
     if target_dir is not None:
-        results['cars_no_row_names'].save(f'{target_dir}/cars_no_row_names.xlsx')
+        results.wbs['cars_no_row_names'].save(f'{target_dir}/cars_no_row_names.xlsx')
 
     # no titles
     tbl = TableSpam(
@@ -195,11 +211,11 @@ def create_test_files_cars(
                           (`Weight` = Mean:mean_wt + SD:sd_wt))""",
         footnote='Data from the infamous mtcars data set.',
     )
-
-    results['cars_no_titles'] = tbl.as_excel()
+    results.tbls['cars_no_titles'] = tbl
+    results.wbs['cars_no_titles'] = tbl.as_excel()
 
     if target_dir is not None:
-        results['cars_no_titles'].save(f'{target_dir}/cars_no_titles.xlsx')
+        results.wbs['cars_no_titles'].save(f'{target_dir}/cars_no_titles.xlsx')
 
     # no titles, no footnote
     tbl = TableSpam(
@@ -209,11 +225,11 @@ def create_test_files_cars(
                           (`Horse Power` = (Mean = Mean:mean_hp) + (`Standard Deviation` = SD:sd_hp)) +
                           (`Weight` = Mean:mean_wt + SD:sd_wt))""",
     )
-
-    results['cars_no_titles_no_footnote'] = tbl.as_excel()
+    results.tbls['cars_no_titles_no_footnote'] = tbl
+    results.wbs['cars_no_titles_no_footnote'] = tbl.as_excel()
 
     if target_dir is not None:
-        results['cars_no_titles_no_footnote'].save(
+        results.wbs['cars_no_titles_no_footnote'].save(
             f'{target_dir}/cars_no_titles_no_footnote.xlsx'
         )
 
@@ -241,11 +257,11 @@ def create_test_files_cars(
         subtitle='A table created with tablespan',
         footnote='Data from the infamous mtcars data set.',
     )
-
-    results['cars_missing_rownames'] = tbl.as_excel()
+    results.tbls['cars_missing_rownames'] = tbl
+    results.wbs['cars_missing_rownames'] = tbl.as_excel()
 
     if target_dir is not None:
-        results['cars_missing_rownames'].save(
+        results.wbs['cars_missing_rownames'].save(
             f'{target_dir}/cars_missing_rownames.xlsx'
         )
 
